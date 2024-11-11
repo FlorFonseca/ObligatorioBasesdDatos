@@ -1,4 +1,5 @@
 import React from 'react';
+import "./Login.css";
 import { useState } from 'react';
 
 export default function Login() {
@@ -18,13 +19,16 @@ export default function Login() {
     };
 
     return (
-      <form className="form" onSubmit={handlePrueba}>
-        <div className="container">
+      <div className="container">
+        
+        <form className="form" onSubmit={handlePrueba}>
+          <div className='titulo'>Bienvenid@</div>
           <div className="input1">
             <input
               className="input"
               type="email"
               value={correo}
+              placeholder='Email'
               onChange={(e) => setCorreo(e.target.value)}
             />
           </div>
@@ -33,13 +37,14 @@ export default function Login() {
               className="password"
               type="password"
               value={password}
+              placeholder='Contraseña'
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
           <button className="LoginandSignUp-btn" type="submit">
             Login
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     );
 }
