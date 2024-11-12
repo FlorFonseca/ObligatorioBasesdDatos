@@ -1,86 +1,121 @@
 import React, { useState, useEffect } from 'react';
+import './instructores.css';
+import Modal from '../Components/Modal';
+import ModalAgregarInstructor from '../Components/ModalAgregarInstructor';
+import ModalEditarInstructor from '../Components/ModalEditarInstructor';
 
 const Instructores = () => {
   const [instructores, setInstructores] = useState([]);
-  const [formData, setFormData] = useState({
-    ci: '',
-    nombre: '',
-    apellido: '',
-  });
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState("add");
+  const [selectedInstructor, setSelectedInstructor] = useState(null);
 
-  // Función para obtener todos los instructores
   useEffect(() => {
-    fetch('http://localhost:5000/instructores') // Ruta a tu endpoint de instructores
-      .then(response => response.json())
-      .then(data => setInstructores(data))
-      .catch(error => console.error('Error al obtener instructores:', error));
+    fetchInstructores();
   }, []);
 
-  // Función para manejar el cambio en el formulario
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const fetchInstructores = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/instructores");
+      const data = await response.json();
+      setInstructores(data);
+    } catch (error) {
+      console.error("Error al obtener instructores:", error);
+    }
   };
 
-  // Función para agregar un nuevo instructor
-  const addInstructor = (e) => {
-    e.preventDefault();
-    fetch('http://localhost:5000/instructores', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
-      .then(response => {
-        if (response.ok) return response.json();
-        throw new Error('Error al crear instructor');
-      })
-      .then(() => {
-        // Añade el instructor a la lista de instructores
-        setInstructores([...instructores, formData]);
-        setFormData({ ci: '', nombre: '', apellido: '' });
-      })
-      .catch(error => console.error('Error al agregar instructor:', error));
+  const handleOpenModal = (type, instructor = null) => {
+    setModalType(type);
+    setSelectedInstructor(instructor);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedInstructor(null);
+  };
+
+  const handleAddInstructor = async (newInstructor) => {
+    try {
+      const response = await fetch("http://localhost:5000/instructores", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newInstructor),
+      });
+      if (response.ok) {
+        fetchInstructores();
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error("Error al agregar instructor:", error);
+    }
+  };
+
+  const handleEditInstructor = async (updatedInstructor) => {
+    try {
+      const response = await fetch(`http://localhost:5000/instructores`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedInstructor),
+      });
+      if (response.ok) {
+        fetchInstructores();
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error("Error al editar instructor:", error);
+    }
+  };
+
+  const handleDeleteInstructor = async (ci) => {
+    try {
+      const response = await fetch(`http://localhost:5000/instructores/${ci}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        fetchInstructores();
+      }
+    } catch (error) {
+      console.error("Error al eliminar instructor:", error);
+    }
   };
 
   return (
-    <div>
-      <h2>Gestión de Instructores</h2>
-      <form onSubmit={addInstructor}>
-        <input
-          type="text"
-          name="ci"
-          placeholder="Cédula"
-          value={formData.ci}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre"
-          value={formData.nombre}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="apellido"
-          placeholder="Apellido"
-          value={formData.apellido}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Agregar Instructor</button>
-      </form>
+    <div className='container'>
+      <h2 className='título-instructores'>Gestión de Instructores</h2>
+      <button className='button-agregar-instructor' onClick={() => handleOpenModal("add")}>Agregar Instructor</button>
 
-      <h3>Lista de Instructores</h3>
-      <ul>
+      <h3 className='subtítulo-instructores'>Lista de Instructores</h3>
+      <ul className='lista-instructores'>
         {instructores.map((instructor) => (
           <li key={instructor.ci}>
-            {instructor.nombre} {instructor.apellido} - CI: {instructor.ci}
+            <div className="instructor-info">
+              {instructor.nombre} {instructor.apellido} - CI: {instructor.ci}
+            </div>
+            <div className="instructor-buttons">
+              <button onClick={() => handleOpenModal("edit", instructor)}>Editar</button>
+              <button onClick={() => handleDeleteInstructor(instructor.ci)}>Eliminar</button>
+            </div>
           </li>
         ))}
       </ul>
+
+
+      {showModal && modalType === "add" && (
+        <Modal onClose={handleCloseModal}>
+          <ModalAgregarInstructor onSubmit={handleAddInstructor} />
+        </Modal>
+      )}
+
+      {showModal && modalType === "edit" && (
+        <Modal onClose={handleCloseModal}>
+          <ModalEditarInstructor instructor={selectedInstructor} onSubmit={handleEditInstructor} />
+        </Modal>
+      )}
     </div>
   );
 };
