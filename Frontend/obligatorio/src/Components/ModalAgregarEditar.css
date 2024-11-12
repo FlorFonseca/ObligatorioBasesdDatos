@@ -79,3 +79,25 @@ input[disabled] {
     background-color: #f5f5f5;
     cursor: not-allowed;
 }
+
+input[type="number"] {
+    /* Estilos para el input de tipo number */
+    width: 100px;
+    padding: 8.5px;
+    font-size: 16px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    border-color: rgb(0 0 0 / 31%);
+}
+
+input[type="number"]:last-of-type {
+    /* Cambia el margen solo en el último input de tipo number */
+    margin-bottom: 0px;
+}
+
+/* Para personalizar los botones de incremento/decremento en navegadores webkit (Chrome, Safari) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

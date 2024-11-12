@@ -1,0 +1,70 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    min-height: 100vh;
+}
+
+.titulo-actividades {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.subtítulo-actividades {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.lista-actividades {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    max-width: 600px;
+    margin-top: 20px;
+}
+
+.lista-actividades li {
+    background-color: #ffffff;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lista-actividades .actividad-info {
+    flex-grow: 1;
+    /* Ocupa el espacio disponible */
+}
+
+.lista-actividades .actividad-button {
+    display: flex;
+    gap: 10px;
+}
+
+.lista-actividades li button {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.lista-actividades li button:first-child {
+    background-color: #ffc107;
+}
+
+.lista-actividades li button:hover {
+    background-color: #b98d0b;
+}
+

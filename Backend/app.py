@@ -25,7 +25,7 @@ def login():
         return jsonify({"message": "Credenciales incorrectas"}), 401
 
 # CRUD de instructores
-@app.route('/instructores', methods=['GET', 'POST'])
+@app.route('/instructores', methods=['GET', 'POST', 'PUT'])
 def manage_instructors():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -45,6 +45,61 @@ def manage_instructors():
         cursor.close()
         connection.close()
         return jsonify({"message": "Instructor creado"}), 201
+    
+    if request.method == 'PUT':
+        try:
+            data = request.get_json()
+            ci = data.get('ci')
+            nombre = data.get('nombre')
+            apellido = data.get('apellido')
+
+            cursor.execute("""
+                UPDATE instructores 
+                SET nombre = %s, apellido = %s
+                WHERE ci = %s
+            """, (nombre, apellido, ci))
+
+            connection.commit()
+            cursor.close()
+            connection.close()
+
+            return jsonify({"message": "Instructor actualizado"}), 200
+        except Exception as e:
+            cursor.close()
+            connection.close()
+            return jsonify({"message": "Error al actualizar el instructor", "error": str(e)}), 500
+        
+# Eliminar un instructor por ci
+@app.route('/instructores/<string:ci>', methods=['DELETE'])
+def delete_instructor(ci):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("DELETE FROM instructores WHERE ci = %s", (ci,))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({"message": "Instructor eliminado"}), 200
+    except Exception as e:
+        return jsonify({"message": "Error al eliminar instructor", "error": str(e)}), 500
+    
+# Lista de actividades
+@app.route('/actividades', methods=['GET'])
+def get_activities():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM actividades")
+    actividades = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(actividades)
+
 
 # Modificación de actividades
 @app.route('/actividades/<id>', methods=['PUT'])
