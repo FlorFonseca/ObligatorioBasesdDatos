@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, request, make_response
+from flask_cors import CORS
 from config import get_db_connection
 
 app = Flask(__name__)
+CORS(app)
 
 # Login de usuario
 @app.route('/login', methods=['POST'])
@@ -65,7 +67,7 @@ def update_activity(id):
     return jsonify({"message": "Actividad actualizada"}), 200
 
 # CRUD de alumnos
-@app.route('/alumnos', methods=['GET', 'POST'])
+@app.route('/alumnos', methods=['GET', 'POST', 'PUT'])
 def manage_students():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -78,18 +80,71 @@ def manage_students():
         return jsonify(alumnos)
 
     if request.method == 'POST':
-        data = request.get_json()
-        ci, nombre, apellido, fecha_nacimiento, num_contacto, email = (
-            data['ci'], data['nombre'], data['apellido'], data['fecha_nacimiento'], data['num_contacto'], data['email']
-        )
-        cursor.execute("""
-            INSERT INTO alumnos (ci, nombre, apellido, fecha_nacimiento, num_contacto, email) 
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (ci, nombre, apellido, fecha_nacimiento, num_contacto, email))
+        try:
+            data = request.get_json()
+            ci, nombre, apellido, fecha_nacimiento, num_contacto, email = (
+                data['ci'], data['nombre'], data['apellido'], data['fecha_nacimiento'], data['num_contacto'], data['email']
+            )
+            cursor.execute("""
+                INSERT INTO alumnos (ci, nombre, apellido, fecha_nacimiento, num_contacto, email) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (ci, nombre, apellido, fecha_nacimiento, num_contacto, email))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            return jsonify({"message": "Alumno creado"}), 201
+        except Exception as e:
+            cursor.close()
+            connection.close()
+            return jsonify({"message": "Error al crear el alumno", "error": str(e)}), 500
+
+    if request.method == 'PUT':
+        try:
+            data = request.get_json()
+            print(data)
+            ci = data.get('ci')
+            nombre = data.get('nombre')
+            apellido = data.get('apellido')
+            fecha_nacimiento = data.get('fecha_nacimiento')
+            num_contacto = data.get('num_contacto')
+            email = data.get('email')
+
+            cursor.execute("""
+                UPDATE alumnos 
+                SET nombre = %s, apellido = %s, fecha_nacimiento = %s, num_contacto = %s, email = %s
+                WHERE ci = %s
+            """, (nombre, apellido, fecha_nacimiento, num_contacto, email, ci))
+
+            connection.commit()
+            cursor.close()
+            connection.close()
+
+            return jsonify({"message": "Alumno actualizado"}), 200
+        except Exception as e:
+            cursor.close()
+            connection.close()
+            return jsonify({"message": "Error al actualizar el alumno", "error": str(e)}), 500
+
+
+# Eliminar un alumno por ci
+@app.route('/alumnos/<string:ci>', methods=['DELETE'])
+def delete_student(ci):
+    try:
+        # Conectar a la base de datos
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Ejecutar la consulta para eliminar al alumno con el ci especificado
+        cursor.execute("DELETE FROM alumnos WHERE ci = %s", (ci,))
         connection.commit()
+
         cursor.close()
         connection.close()
-        return jsonify({"message": "Alumno creado"}), 201
+
+        return jsonify({"message": "Alumno eliminado"}), 200
+    except Exception as e:
+        return jsonify({"message": "Error al eliminar alumno", "error": str(e)}), 500
+
 
 # Consultar reportes
 @app.route('/reportes', methods=['GET'])

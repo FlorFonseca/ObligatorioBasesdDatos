@@ -1,12 +1,17 @@
-import Login from './Views/prueba';
+import Login from "./Views/Login";
+import Alumnos from "./Views/alumno";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Instructores from './Views/instructores';
-import './App.css';
+import "./App.css";
 
 function App() {
   return (
-    <div className="App">
-      <Instructores />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/alumnos" element={<Alumnos />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
