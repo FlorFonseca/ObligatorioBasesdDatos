@@ -1,8 +1,8 @@
-import Login from "./Views/Login";
+import Login from "./Views/Login/Login";
 import Home from "./Views/Home/home";
-import Alumnos from "./Views/alumno";
-import Instructores from './Views/instructores';
-import Actividades from './Views/actividades';
+import Alumnos from "../src/Views/Alumnos/alumno";
+import Instructores from '../src/Views/Instructores/instructores';
+import Actividades from '../src/Views/Actividades/actividades';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 
