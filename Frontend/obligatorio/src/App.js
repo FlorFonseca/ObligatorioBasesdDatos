@@ -3,6 +3,7 @@ import Home from "./Views/Home/home";
 import Alumnos from "../src/Views/Alumnos/alumno";
 import Instructores from '../src/Views/Instructores/instructores';
 import Actividades from '../src/Views/Actividades/actividades';
+import Clases from "../src/Views/Clases/Clases";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Clase from "./Views/Clases/Clases";
@@ -16,7 +17,7 @@ function App() {
         <Route path="/alumnos" element={<Alumnos />} />
         <Route path="/instructores" element={<Instructores />} />
         <Route path="/actividades" element={<Actividades />} />
-        <Route path= "/clases" element={<Clase/>}/>
+        <Route path= "/clases" element={<Clases/>}/>
       </Routes>
     </BrowserRouter>
   );
