@@ -20,6 +20,9 @@ const Home = () => {
             <button className='home-button' onClick={() => navigate('/actividades')}>
                 Ir a Actividades
             </button>
+            <button className='home-button' onClick={() => navigate('/turnos')}>
+                Ir a Turnos
+            </button>
         </div>
     );
 }

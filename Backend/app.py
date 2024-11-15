@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from config import get_db_connection
+from datetime import timedelta
 
 app = Flask(__name__)
 CORS(app)
@@ -85,6 +86,73 @@ def delete_instructor(ci):
         return jsonify({"message": "Instructor eliminado"}), 200
     except Exception as e:
         return jsonify({"message": "Error al eliminar instructor", "error": str(e)}), 500
+    
+# CRUD de turnos
+@app.route('/turnos', methods=['GET', 'POST', 'PUT'])
+def manage_turns():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    if request.method == 'GET':
+        cursor.execute("SELECT * FROM turnos")
+        turnos = cursor.fetchall()
+        for turno in turnos:
+            if 'hora_inicio' in turno and isinstance(turno['hora_inicio'], timedelta):
+                turno['hora_inicio'] = str(turno['hora_inicio'])  # Convertir a string
+            if 'hora_fin' in turno and isinstance(turno['hora_fin'], timedelta):
+                turno['hora_fin'] = str(turno['hora_fin'])  # Convertir a string
+        cursor.close()
+        connection.close()
+        return jsonify(turnos)
+
+    if request.method == 'POST':
+        data = request.get_json()
+        id, hora_inicio, hora_fin = data['id'], data['hora_inicio'], data['hora_fin']
+        cursor.execute("INSERT INTO turnos (id, hora_inicio, hora_fin) VALUES (%s, %s, %s)", (id, hora_inicio, hora_fin))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return jsonify({"message": "Turno creado"}), 201
+    
+    if request.method == 'PUT':
+        try:
+            data = request.get_json()
+            id = data.get('id')
+            hora_inicio = data.get('hora_inicio')
+            hora_fin = data.get('hora_fin')
+
+            cursor.execute("""
+                UPDATE turnos 
+                SET hora_inicio = %s, hora_fin = %s
+                WHERE id = %s
+            """, (hora_inicio, hora_fin, id))
+
+            connection.commit()
+            cursor.close()
+            connection.close()
+
+            return jsonify({"message": "Turno actualizado"}), 200
+        except Exception as e:
+            cursor.close()
+            connection.close()
+            return jsonify({"message": "Error al actualizar el turno", "error": str(e)}), 500
+        
+# Eliminar un instuctor por id
+@app.route('/turnos/<string:id>', methods=['DELETE'])
+def delete_turno(id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("DELETE FROM turnos WHERE id = %s", (id,))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({"message": "Turno eliminado"}), 200
+    except Exception as e:
+        return jsonify({"message": "Error al eliminar turno", "error": str(e)}), 500
     
 # Lista de actividades
 @app.route('/actividades', methods=['GET'])
