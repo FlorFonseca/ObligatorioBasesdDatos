@@ -1,10 +1,12 @@
 import React from 'react';
 import "./Login.css";
 import { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
     const [correo, setCorreo] = useState(''); 
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
     const handlePrueba = async (e) => {
       e.preventDefault();
@@ -20,6 +22,8 @@ export default function Login() {
         if(response.ok){
           const data = await response.json();
           console.log(data);
+          navigate("/home");
+
         }
       }catch(error){
         console.log("error", e);
