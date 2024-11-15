@@ -1,0 +1,88 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  min-height: 100vh;
+}
+
+.título-alumnos {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.button-agregar-alumno {
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 30px;
+  transition: background-color 0.3s;
+}
+
+.button-agregar-alumno:hover {
+  background-color: #0056b3;
+}
+
+.subtítulo-alumnos {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.lista-alumnos {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+  max-width: 600px;
+  margin-top: 20px;
+}
+
+.lista-alumnos li {
+  background-color: #ffffff;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lista-alumnos .alumno-info {
+  flex-grow: 1;
+}
+
+.lista-alumnos .alumno-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.lista-alumnos li button {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.lista-alumnos li button:first-child {
+  background-color: #ffc107;
+}
+
+.lista-alumnos li button:hover {
+  background-color: #218838;
+}
+
+.lista-alumnos li button:first-child:hover {
+  background-color: #e0a800;
+}
