@@ -1,4 +1,5 @@
 import Login from "./Views/Login";
+import Home from "./Views/Home/home";
 import Alumnos from "./Views/alumno";
 import Instructores from './Views/instructores';
 import Actividades from './Views/actividades';
@@ -10,6 +11,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/alumnos" element={<Alumnos />} />
         <Route path="/instructores" element={<Instructores />} />
         <Route path="/actividades" element={<Actividades />} />
