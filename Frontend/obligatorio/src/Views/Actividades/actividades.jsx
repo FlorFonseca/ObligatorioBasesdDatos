@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import {useNavigate} from "react-router-dom";
 import "./actividades.css";
 import Modal from "../../Components/Modal/Modal";
 import ModalEditarActividad from "../../Components/Modal/ModalEditarActividad";
 
 const Actividades = () => {
+  const navigate = useNavigate();
   const [actividades, setActividades] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("add");
@@ -57,6 +59,9 @@ const Actividades = () => {
 
   return (
     <div className="container">
+      <button className="back-button" onClick={() => navigate('/home')}>
+        Back
+      </button>
       <h1 className="titulo-actividades">Gestión de Actividades</h1>
 
       <h3 className="subtítulo-actividades">Lista de Actividades</h3>

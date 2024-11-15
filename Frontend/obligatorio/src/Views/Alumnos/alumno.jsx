@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import {useNavigate} from "react-router-dom";
 import ModalAgregarAlumno from "../../Components/ModalAlumno/ModalAgregarAlumno";
 import ModalEditarAlumno from "../../Components/ModalAlumno/ModalEditarAlumno";
 import Modal from "../../Components/Modal/Modal";
 import "./alumno.css";
 
 const Alumnos = () => {
+  const navigate = useNavigate();
   const [alumnos, setAlumnos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("add"); // "add" o "edit"
@@ -87,6 +89,9 @@ const Alumnos = () => {
 
   return (
     <div className="container">
+      <button className="back-button" onClick={() => navigate('/home')}>
+        Back
+      </button>
       <h2 className="título-alumnos">Gestión de Alumnos</h2>
       <button
         className="button-agregar-alumno"
