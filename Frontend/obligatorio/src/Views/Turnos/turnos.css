@@ -8,19 +8,35 @@
     min-height: 100vh;
 }
 
-.titulo-actividades {
+.título-turnos {
     font-size: 2rem;
     color: #333;
     margin-bottom: 20px;
 }
 
-.subtítulo-actividades {
+.button-agregar-turno {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-bottom: 30px;
+    transition: background-color 0.3s;
+}
+
+.button-agregar-turno:hover {
+    background-color: #0056b3;
+}
+
+.subtítulo-turnos {
     font-size: 1.5rem;
     color: #333;
     margin-bottom: 20px;
 }
 
-.lista-actividades {
+.lista-turnos {
     list-style: none;
     padding: 0;
     width: 100%;
@@ -28,7 +44,7 @@
     margin-top: 20px;
 }
 
-.lista-actividades li {
+.lista-turnos li {
     background-color: #ffffff;
     padding: 15px;
     margin-bottom: 10px;
@@ -39,17 +55,18 @@
     align-items: center;
 }
 
-.lista-actividades .actividad-info {
+.lista-turnos .turno-info {
     flex-grow: 1;
     /* Ocupa el espacio disponible */
 }
 
-.lista-actividades .actividad-button {
+.lista-turnos .turno-buttons {
     display: flex;
     gap: 10px;
+    /* Espacio entre los botones */
 }
 
-.lista-actividades li button {
+.lista-turnos li button {
     background-color: #28a745;
     color: #fff;
     border: none;
@@ -60,12 +77,16 @@
     transition: background-color 0.3s;
 }
 
-.lista-actividades li button:first-child {
+.lista-turnos li button:first-child {
     background-color: #ffc107;
 }
 
-.lista-actividades li button:hover {
-    background-color: #b98d0b;
+.lista-turnos li button:hover {
+    background-color: #218838;
+}
+
+.lista-turnos li button:first-child:hover {
+    background-color: #e0a800;
 }
 
 .back-button {
