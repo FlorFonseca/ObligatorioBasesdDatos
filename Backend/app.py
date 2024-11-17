@@ -444,11 +444,8 @@ def get_class():
                    actividades.descripcion AS nombre_actividad,
                    CONCAT(instructores.nombre, ' ', instructores.apellido) AS nombre_instructor,
                     CONCAT(turnos.hora_inicio,' a ', turnos.hora_fin) AS turno,
-                    clase.tipo_clase, clase.aforo, clase.dictada,
-                    CONCAT(alumno.nombre, ' ', alumno.apellido) AS nombre_alumno
+                    clase.tipo_clase, clase.aforo, clase.dictada
             FROM clase
-            JOIN alumo_clase ON clase.id = alumno_clase.id_clase
-            JOIN alumno ON alumno_clase.ci_alumno = alumno.ci
             JOIN actividades ON clase.id_actividad = actividades.id
             JOIN instructores ON clase.ci_instructor = instructores.ci
             JOIN turnos ON clase.id_turno = turnos.id
