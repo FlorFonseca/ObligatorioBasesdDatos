@@ -11,6 +11,7 @@ export default function Clases() {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("add");
 
+  console.log(clases);
   //el back devuelve una lista de todas las clases
   useEffect(() => {
     const handleGetClases = async () => {
@@ -31,9 +32,11 @@ export default function Clases() {
     handleGetClases();
   }, []);
 
+  
   const handleAddClass = async (newClass) => {
+    console.log("Datos enviados:", newClass); 
     try {
-      const response = await fetch("http://localhost:5000/clases", {
+      const response = await fetch("http://localhost:5000/clase", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -118,7 +121,7 @@ export default function Clases() {
       <button onClick={() => handleOpenModal("add")}>Agregar Clase</button>
       {showModal && modalType === "add" && (
         <Modal onClose={handleCloseModal}>
-          <ModalAgregarClase onAdd={handleAddClass} />
+          <ModalAgregarClase onSubmit={handleAddClass} />
         </Modal>
       )}
 
