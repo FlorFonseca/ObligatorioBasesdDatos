@@ -154,11 +154,15 @@ export default function Clases() {
           <p>No hay clases disponibles.</p>
         )}
       </div>
-      {showModal && modalType === "edit" && (
+
+        {showModal && (
         <Modal onClose={handleCloseModal}>
-          <ModalEditarClase clase={selectedClass} onSubmit={handleEditClass} />
+          {modalType === "add" && <ModalAgregarClase onAdd={handleAddClass} />}
+          {modalType === "edit" && <ModalEditarClase clase={selectedClass} onSubmit={handleEditClass} />}
+          {modalType === "details" && <ModalDetallesClase clase={selectedClass} onClose={handleCloseModal} />}
         </Modal>
       )}
+      
     </div>
   );
 }
