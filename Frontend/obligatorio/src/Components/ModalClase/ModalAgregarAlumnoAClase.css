@@ -1,0 +1,71 @@
+.modal-agregar-alumno {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.modal-agregar-alumno-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+}
+
+.modal-agregar-alumno h3 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.modal-agregar-alumno h4 {
+    margin-bottom: 10px;
+}
+
+.modal-agregar-alumno div {
+    margin-bottom: 20px;
+}
+
+.modal-agregar-alumno div label {
+    margin-left: 8px;
+    font-size: 16px;
+}
+
+.modal-agregar-alumno input[type="radio"],
+.modal-agregar-alumno input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.button-add-alumno {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.button-add-alumno:hover {
+    background-color: #45a049;
+}
+
+.cerrar-alumno {
+    background-color: #f44336;
+    margin-left: 10px;
+}
+
+.cerrar-alumno:hover {
+    background-color: #e53935;
+}

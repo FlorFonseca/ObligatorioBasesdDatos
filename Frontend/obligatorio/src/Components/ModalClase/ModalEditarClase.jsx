@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from "react";
 import "../ModalAgregarEditar.css";
 
-const ModalEditarClase = ({clase, onSubmit}) => {
-  const [formData, setFormData] = useState(clase);
-
+const ModalEditarClase = ({ clase, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    id: "",
+    ci_instructor: "",
+    id_actividad: "",
+    id_turno: "",
+    tipo_clase: "",
+    aforo: "",
+    dictada: false,
+  });
 
   useEffect(() => {
+    if (clase) {
       setFormData(clase);
+    }
   }, [clase]);
-
-
-    console.log("clase a editar", clase);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -22,53 +28,48 @@ const ModalEditarClase = ({clase, onSubmit}) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Formulario enviado:", formData);
     onSubmit(formData);
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <h2>Editar Clase</h2>
-      <label htmlFor="idClase">ID Clase:</label>
+      <label>ID Clase:</label>
       <input
         type="text"
-        id="idClase"
         name="id"
-        value={formData.id_clase}
+        value={formData.id}
         onChange={handleChange}
-        disabled
+        required
       />
-      <label htmlFor="ciInstructor">CI Instructor:</label>
+      <label>CI Instructor:</label>
       <input
         type="number"
-        id="ciInstructor"
         name="ci_instructor"
         value={formData.ci_instructor}
         onChange={handleChange}
         required
       />
-      <label htmlFor="idActividad">ID Actividad:</label>
+      <label>ID Actividad:</label>
       <input
-        type="text"
-        id="idActividad"
+        type="number"
         name="id_actividad"
         value={formData.id_actividad}
         onChange={handleChange}
         required
       />
-      <label htmlFor="idTurno">ID Turno:</label>
+      <label>ID Turno:</label>
       <input
-        type="text"
-        id="idTurno"
+        type="number"
         name="id_turno"
         value={formData.id_turno}
         onChange={handleChange}
         required
       />
-      <label htmlFor="tipoClase">Tipo Clase:</label>
+      <label>Tipo Clase:</label>
       <select
+        type="number"
         name="tipo_clase"
-        id="tipoClase"
         value={formData.tipo_clase}
         onChange={handleChange}
         required
@@ -77,19 +78,17 @@ const ModalEditarClase = ({clase, onSubmit}) => {
         <option value="Grupal">Grupal</option>
         <option value="Individual">Individual</option>
       </select>
-      <label htmlFor="aforo">Aforo:</label>
+      <label>Aforo:</label>
       <input
         type="number"
-        id="aforo"
         name="aforo"
         value={formData.aforo}
         onChange={handleChange}
         required
       />
-      <label htmlFor="dictada">¿Dictada?</label>
+      <label>¿Dictada?</label>
       <input
         type="checkbox"
-        id="dictada"
         name="dictada"
         checked={formData.dictada}
         onChange={handleChange}
