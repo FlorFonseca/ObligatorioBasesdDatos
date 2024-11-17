@@ -14,24 +14,22 @@ export default function Clases() {
 
   console.log(clases);
   //el back devuelve una lista de todas las clases
-
-  const handleGetClases = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/clases", {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        const classData = await response.json(); //obtengo todo el array de clases
-        setClases(classData);
-      }
-    } catch (error) {
-      console.log("error al obtener las clases", error);
-    }
-  };
-
   useEffect(() => {
+    const handleGetClases = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/clases", {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.ok) {
+          const classData = await response.json(); //obtengo todo el array de clases
+          setClases(classData);
+        }
+      } catch (error) {
+        console.log("error al obtener las clases", error);
+      }
+    };
     handleGetClases();
   }, []);
 
@@ -51,7 +49,6 @@ export default function Clases() {
         const addedClass = await response.json();
         console.log(addedClass);
         setClases((prevClases) => [...prevClases, newClass]);
-        handleGetClases();
         setShowModal(false);
       } else {
         console.log("error agregando la clase");
@@ -62,7 +59,6 @@ export default function Clases() {
   };
 
   const handleEditClass = async (updatedClass) => {
-    console.log("Actualizando clase con datos:", updatedClass);
     try {
       const response = await fetch(
         `http://localhost:5000/clase/${updatedClass.id_clase}`,
@@ -74,14 +70,11 @@ export default function Clases() {
       );
 
       if (response.ok) {
-        const updatedData = await response.json();
-        console.log("Clase actualizada:", updatedData);
         setClases((prevClases) =>
           prevClases.map((clase) =>
-            clase.id_clase === updatedData.id_clase ? updatedData : clase
+            clase.id_clase === updatedClass.id_clase ? updatedClass : clase
           )
         );
-        handleGetClases();
         setShowModal(false);
       } else {
         console.error("Error al editar la clase.");
@@ -102,8 +95,6 @@ export default function Clases() {
         setClases((prevClases) =>
           prevClases.filter((clase) => clase.id_clase !== idClase)
         );
-        handleGetClases();
-        setShowModal(false);
       } else {
         console.error("Error al eliminar la clase.");
       }
@@ -153,9 +144,11 @@ export default function Clases() {
           <p>No hay clases disponibles.</p>
         )}
       </div>
-      {showModal && modalType === "edit" && (
+      {showModal && (
         <Modal onClose={handleCloseModal}>
-          <ModalEditarClase clase={selectedClass} onSubmit={handleEditClass} />
+          {modalType === "add" && <ModalAgregarClase onAdd={handleAddClass} />}
+          {modalType === "edit" && <ModalEditarClase onEdit={handleEditClass} />}
+          {modalType === "details" && <ModalDetallesClase clase={selectedClass} onClose={handleCloseModal} />}
         </Modal>
       )}
     </div>
