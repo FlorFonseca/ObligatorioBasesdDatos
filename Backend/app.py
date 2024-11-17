@@ -1,3 +1,4 @@
+import datetime
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from config import get_db_connection
@@ -24,6 +25,8 @@ def login():
         return jsonify({"message": "Login exitoso"}), 200
     else:
         return jsonify({"message": "Credenciales incorrectas"}), 401
+
+
 
 # CRUD de instructores
 @app.route('/instructores', methods=['GET', 'POST', 'PUT'])
@@ -308,6 +311,154 @@ def generate_reports():
     connection.close()
 
     return jsonify({"ingresos": ingresos, "alumnos": alumnos, "turnos": turnos})
+
+
+# CRUD de clases
+@app.route('/clase', methods=['POST'])#Crear una clase
+def create_class():
+    try:
+        data = request.get_json()
+        id_clase, ci_instructor, id_actividad, id_turno, tipo_clase, aforo = data['id'], data['ci_instructor'], data['id_actividad'], data['id_turno'], data['tipo_clase'], data['aforo']
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Validar que el instructor no tenga otra clase en el mismo turno
+        cursor.execute("""
+            SELECT COUNT(*) AS count
+            FROM clase
+            WHERE ci_instructor = %s AND id_turno = %s
+        """, (ci_instructor, id_turno))
+        conflict = cursor.fetchone()
+        if conflict[0] > 0:
+            return jsonify({"error": "El instructor ya tiene una clase asignada en este turno"}), 400
+
+        # Insertar la clase
+        cursor.execute("""
+            INSERT INTO clase (id, ci_instructor, id_actividad, id_turno, dictada, tipo_clase, aforo)
+            VALUES (%s, %s, %s, %s, false, %s, %s)
+        """, (id_clase, ci_instructor, id_actividad, id_turno, tipo_clase, aforo))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+        return jsonify({"message": "Clase creada exitosamente"}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/clase/<id>', methods=['PUT'])#Para modificar la clase
+def update_class(id):
+    try:
+        data = request.get_json()
+        ci_instructor = data.get('ci_instructor')
+        id_turno = data.get('id_turno')
+        aforo = data.get('aforo')
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Verificar si la clase existe y si no está en horario
+        cursor.execute("""
+            SELECT clase.id, turnos.hora_inicio, turnos.hora_fin
+            FROM clase
+            JOIN turnos ON clase.id_turno = turnos.id
+            WHERE clase.id = %s
+        """, (id,))
+        clase = cursor.fetchone()
+        if not clase:
+            return jsonify({"error": "Clase no encontrada"}), 404
+
+        hora_actual = datetime.datetime.now().time()
+        if clase[1] <= hora_actual <= clase[2]:
+            return jsonify({"error": "No se puede modificar una clase durante su horario"}), 400
+
+        # Validar conflictos con el instructor
+        if ci_instructor and id_turno:
+            cursor.execute("""
+                SELECT COUNT(*) AS count
+                FROM clase
+                WHERE ci_instructor = %s AND id_turno = %s AND id != %s
+            """, (ci_instructor, id_turno, id))
+            conflict = cursor.fetchone()
+            if conflict[0] > 0:
+                return jsonify({"error": "El instructor ya tiene otra clase asignada en este turno"}), 400
+
+        # Actualizar la clase
+        cursor.execute("""
+            UPDATE clase
+            SET ci_instructor = %s, id_turno = %s, aforo = %s
+            WHERE id = %s
+        """, (ci_instructor or clase[0], id_turno or clase[1], aforo, id))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+        return jsonify({"message": "Clase actualizada exitosamente"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/clase/<id>', methods=['DELETE'])#Eliminar una clase
+def delete_class(id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Verificar si la clase existe y si no está en horario
+        cursor.execute("""
+            SELECT clase.id, turnos.hora_inicio, turnos.hora_fin
+            FROM clase
+            JOIN turnos ON clase.id_turno = turnos.id
+            WHERE clase.id = %s
+        """, (id,))
+        clase = cursor.fetchone()
+        if not clase:
+            return jsonify({"error": "Clase no encontrada"}), 404
+
+        hora_actual = datetime.datetime.now().time()
+        if clase[1] <= hora_actual <= clase[2]:
+            return jsonify({"error": "No se puede eliminar una clase durante su horario"}), 400
+
+        # Eliminar la clase
+        cursor.execute("DELETE FROM clase WHERE id = %s", (id,))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+        return jsonify({"message": "Clase eliminada exitosamente"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/clases', methods=['GET'])#Sirve para obtener la clase, como queremos mostrar el nombre de la actividad hacemos el join con actividades
+def get_class():
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT clase.id AS id_clase,
+                   actividades.descripcion AS nombre_actividad,
+                   CONCAT(instructores.nombre, ' ', instructores.apellido) AS nombre_instructor,
+                    CONCAT(turnos.hora_inicio,' a ', turnos.hora_fin) AS turno,
+                    clase.tipo_clase, clase.aforo, clase.dictada
+            FROM clase
+            JOIN actividades ON clase.id_actividad = actividades.id
+            JOIN instructores ON clase.ci_instructor = instructores.ci
+            JOIN turnos ON clase.id_turno = turnos.id
+        """)
+        #CONCAT combina el nombre y el apellido del instructor
+        clases = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify(clases), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
