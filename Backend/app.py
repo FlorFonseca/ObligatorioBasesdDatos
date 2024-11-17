@@ -440,15 +440,29 @@ def get_class():
         cursor = connection.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT clase.id AS id_clase,
-                   actividades.descripcion AS nombre_actividad,
-                   CONCAT(instructores.nombre, ' ', instructores.apellido) AS nombre_instructor,
-                    CONCAT(turnos.hora_inicio,' a ', turnos.hora_fin) AS turno,
-                    clase.tipo_clase, clase.aforo, clase.dictada
+           SELECT 
+                clase.id AS id_clase,
+                actividades.descripcion AS nombre_actividad,
+                CONCAT(instructores.nombre, ' ', instructores.apellido) AS nombre_instructor,
+                CONCAT(turnos.hora_inicio, ' a ', turnos.hora_fin) AS turno,
+                clase.tipo_clase, 
+                clase.aforo, 
+                clase.dictada,
+                actividades.costo AS costo_actividad,
+                SUM(DISTINCT equipamiento.costo) AS costo_equipamiento,
+                GROUP_CONCAT(DISTINCT CONCAT(alumnos.nombre, ' ', alumnos.apellido) SEPARATOR ', ') AS alumnos_inscritos
             FROM clase
             JOIN actividades ON clase.id_actividad = actividades.id
             JOIN instructores ON clase.ci_instructor = instructores.ci
             JOIN turnos ON clase.id_turno = turnos.id
+            LEFT JOIN alumno_clase ON clase.id = alumno_clase.id_clase
+            LEFT JOIN alumnos ON alumno_clase.ci_alumno = alumnos.ci
+            LEFT JOIN actividad_equipamiento ON actividades.id = actividad_equipamiento.id_actividad
+            LEFT JOIN equipamiento ON actividad_equipamiento.id_equipamiento = equipamiento.id
+            GROUP BY clase.id;
+
+
+
         """)
         #CONCAT combina el nombre y el apellido del instructor
         clases = cursor.fetchall()

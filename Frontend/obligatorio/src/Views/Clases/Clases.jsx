@@ -4,6 +4,7 @@ import ClassCard from "../../Components/Card/ClassCard";
 import ModalAgregarClase from "../../Components/ModalClase/ModalAgregarClase";
 import ModalEditarClase from "../../Components/ModalClase/ModalEditarClase";
 import Modal from "../../Components/Modal/Modal";
+import ModalDetallesClase from "../../Components/ModalClase/ModalDetalleClase";
 
 export default function Clases() {
   const [clases, setClases] = useState([]);
@@ -119,18 +120,7 @@ export default function Clases() {
 
       {/* Formulario para agregar clases */}
       <button onClick={() => handleOpenModal("add")}>Agregar Clase</button>
-      {showModal && modalType === "add" && (
-        <Modal onClose={handleCloseModal}>
-          <ModalAgregarClase onSubmit={handleAddClass} />
-        </Modal>
-      )}
 
-      <button onClick={() => handleOpenModal("edit")}>Editar Clase</button>
-      {showModal && modalType === "edit" && (
-        <Modal onClose={handleCloseModal}>
-          <ModalEditarClase onEdit={handleEditClass} />
-        </Modal>
-      )}
       {/* Listado de clases */}
       <h3>Listado de Clases</h3>
       <div className="clases-container">
@@ -154,6 +144,13 @@ export default function Clases() {
           <p>No hay clases disponibles.</p>
         )}
       </div>
+      {showModal && (
+        <Modal onClose={handleCloseModal}>
+          {modalType === "add" && <ModalAgregarClase onAdd={handleAddClass} />}
+          {modalType === "edit" && <ModalEditarClase onEdit={handleEditClass} />}
+          {modalType === "details" && <ModalDetallesClase clase={selectedClass} onClose={handleCloseModal} />}
+        </Modal>
+      )}
     </div>
   );
 }
