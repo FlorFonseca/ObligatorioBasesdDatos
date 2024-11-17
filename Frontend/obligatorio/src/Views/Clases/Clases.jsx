@@ -90,16 +90,17 @@ export default function Clases() {
     }
   };
 
-  const handleDeleteClass = async (idClase) => {
+  const handleDeleteClass = async (deletedClass) => {
     try {
-      const response = await fetch(`http://localhost:5000/clase/${idClase}`, {
+      const response = await fetch(`http://localhost:5000/clase/${deletedClass.id_clase}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
 
       if (response.ok) {
+        const classDeleted = await response.json();
         setClases((prevClases) =>
-          prevClases.filter((clase) => clase.id_clase !== idClase)
+          prevClases.filter((clase) => clase.id_clase !== classDeleted.id_clase)
         );
         handleGetClases();
         setShowModal(false);
@@ -150,7 +151,7 @@ export default function Clases() {
               dictada={clase.dictada}
               onEdit={() => handleOpenModal("edit", clase)}
               onDetails={() => handleOpenModal("details", clase)}
-              onDelete={() => handleDeleteClass(clase.id_clase)}
+              onDelete={() => handleDeleteClass(clase)}
             />
           ))
         ) : (
