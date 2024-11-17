@@ -355,8 +355,6 @@ def update_class(id):
         ci_instructor = data.get('ci_instructor')
         id_turno = data.get('id_turno')
         aforo = data.get('aforo')
-        dictada = data.get('dictada')
-        tipo_clase = data.get('tipo_clase')
 
         connection = get_db_connection()
         cursor = connection.cursor()
@@ -373,13 +371,7 @@ def update_class(id):
             return jsonify({"error": "Clase no encontrada"}), 404
 
         hora_actual = datetime.datetime.now().time()
-        hora_inicio = clase[1]
-        hora_fin = clase[2]
-        if isinstance(hora_inicio, datetime.timedelta): #Esta parte sirve para convertir los datos a datetime, sino da un error al editar
-            hora_inicio = (datetime.datetime.min + hora_inicio).time()
-        if isinstance(hora_fin, datetime.timedelta):
-            hora_fin = (datetime.datetime.min + hora_fin).time()
-        if hora_inicio <= hora_actual <= hora_fin:
+        if clase[1] <= hora_actual <= clase[2]:
             return jsonify({"error": "No se puede modificar una clase durante su horario"}), 400
 
         # Validar conflictos con el instructor
@@ -396,9 +388,9 @@ def update_class(id):
         # Actualizar la clase
         cursor.execute("""
             UPDATE clase
-            SET ci_instructor = %s, id_turno = %s, aforo = %s, dictada = %s, tipo_clase = %s
+            SET ci_instructor = %s, id_turno = %s, aforo = %s
             WHERE id = %s
-        """, (ci_instructor or clase[0], id_turno or clase[1], aforo, dictada, tipo_clase, id))
+        """, (ci_instructor or clase[0], id_turno or clase[1], aforo, id))
         connection.commit()
 
         cursor.close()
@@ -448,36 +440,29 @@ def get_class():
         cursor = connection.cursor(dictionary=True)
 
         cursor.execute("""
-        SELECT 
-            c.id AS id_clase,
-            a.descripcion AS nombre_actividad,
-            CONCAT(i.nombre, ' ', i.apellido) AS nombre_instructor,
-            CONCAT(t.hora_inicio, ' a ', t.hora_fin) AS turno,
-            i.ci AS ci_instructor,
-            a.id AS id_actividad,
-            t.id AS id_turno,
-            c.tipo_clase, 
-            c.aforo, 
-            c.dictada,
-            a.costo AS costo_actividad,
-            IFNULL(SUM(e.costo), 0) AS costo_equipamiento, -- Suma de los costos del equipamiento utilizado
-            GROUP_CONCAT(DISTINCT CONCAT(al.nombre, ' ', al.apellido) SEPARATOR ', ') AS alumnos_inscritos
-        FROM 
-            obligatorio.clase c
-        JOIN 
-            obligatorio.actividades a ON c.id_actividad = a.id
-        JOIN 
-            obligatorio.instructores i ON c.ci_instructor = i.ci
-        JOIN 
-            obligatorio.turnos t ON c.id_turno = t.id
-        LEFT JOIN 
-            obligatorio.alumno_clase ac ON c.id = ac.id_clase
-        LEFT JOIN 
-            obligatorio.alumnos al ON ac.ci_alumno = al.ci
-        LEFT JOIN 
-            obligatorio.equipamiento e ON ac.id_equipamiento = e.id
-        GROUP BY 
-            c.id, a.descripcion, i.nombre, i.apellido, t.hora_inicio, t.hora_fin, c.tipo_clase, c.aforo, c.dictada, a.costo;
+           SELECT 
+                clase.id AS id_clase,
+                actividades.descripcion AS nombre_actividad,
+                CONCAT(instructores.nombre, ' ', instructores.apellido) AS nombre_instructor,
+                CONCAT(turnos.hora_inicio, ' a ', turnos.hora_fin) AS turno,
+                clase.tipo_clase, 
+                clase.aforo, 
+                clase.dictada,
+                actividades.costo AS costo_actividad,
+                SUM(DISTINCT equipamiento.costo) AS costo_equipamiento,
+                GROUP_CONCAT(DISTINCT CONCAT(alumnos.nombre, ' ', alumnos.apellido) SEPARATOR ', ') AS alumnos_inscritos
+            FROM clase
+            JOIN actividades ON clase.id_actividad = actividades.id
+            JOIN instructores ON clase.ci_instructor = instructores.ci
+            JOIN turnos ON clase.id_turno = turnos.id
+            LEFT JOIN alumno_clase ON clase.id = alumno_clase.id_clase
+            LEFT JOIN alumnos ON alumno_clase.ci_alumno = alumnos.ci
+            LEFT JOIN actividad_equipamiento ON actividades.id = actividad_equipamiento.id_actividad
+            LEFT JOIN equipamiento ON actividad_equipamiento.id_equipamiento = equipamiento.id
+            GROUP BY clase.id;
+
+
+
         """)
         #CONCAT combina el nombre y el apellido del instructor
         clases = cursor.fetchall()
