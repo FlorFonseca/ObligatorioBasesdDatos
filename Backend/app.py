@@ -427,14 +427,8 @@ def delete_class(id):
             return jsonify({"error": "Clase no encontrada"}), 404
 
         hora_actual = datetime.datetime.now().time()
-        hora_inicio = clase[1]
-        hora_fin = clase[2]
-        if isinstance(hora_inicio, datetime.timedelta): #Esta parte sirve para convertir los datos a datetime, sino da un error al editar
-            hora_inicio = (datetime.datetime.min + hora_inicio).time()
-        if isinstance(hora_fin, datetime.timedelta):
-            hora_fin = (datetime.datetime.min + hora_fin).time()
-        if hora_inicio <= hora_actual <= hora_fin:
-            return jsonify({"error": "No se puede modificar una clase durante su horario"}), 400
+        if clase[1] <= hora_actual <= clase[2]:
+            return jsonify({"error": "No se puede eliminar una clase durante su horario"}), 400
 
         # Eliminar la clase
         cursor.execute("DELETE FROM clase WHERE id = %s", (id,))
