@@ -312,6 +312,20 @@ def generate_reports():
 
     return jsonify({"ingresos": ingresos, "alumnos": alumnos, "turnos": turnos})
 
+# GET de equipamientos
+@app.route('/equipamiento', methods=['GET'])
+def get_equipment():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM equipamiento")
+    equipamiento = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(equipamiento)
+
 
 # CRUD de clases
 @app.route('/clase', methods=['POST'])#Crear una clase
