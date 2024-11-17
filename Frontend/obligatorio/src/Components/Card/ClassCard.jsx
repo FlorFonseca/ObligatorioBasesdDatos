@@ -39,7 +39,7 @@ export default function ClassCard({
           Detalles
         </button>
         <button
-          onClick={() => onDelete(clase.id_clase)}
+          onClick={() => onDelete(clase)}
           className="btn btn-delete"
         >
           Eliminar
