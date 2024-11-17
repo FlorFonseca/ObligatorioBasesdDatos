@@ -344,7 +344,8 @@ def create_class():
         return jsonify({"message": "Clase creada exitosamente"}), 201
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print("Error al crear la clase:", str(e))  # Imprime el error en la consola del servidor
+        return jsonify({"error": "Error interno del servidor: " + str(e)}), 500
 
 
 @app.route('/clase/<id>', methods=['PUT'])#Para modificar la clase
@@ -443,8 +444,11 @@ def get_class():
                    actividades.descripcion AS nombre_actividad,
                    CONCAT(instructores.nombre, ' ', instructores.apellido) AS nombre_instructor,
                     CONCAT(turnos.hora_inicio,' a ', turnos.hora_fin) AS turno,
-                    clase.tipo_clase, clase.aforo, clase.dictada
+                    clase.tipo_clase, clase.aforo, clase.dictada,
+                    CONCAT(alumno.nombre, ' ', alumno.apellido) AS nombre_alumno
             FROM clase
+            JOIN alumo_clase ON clase.id = alumno_clase.id_clase
+            JOIN alumno ON alumno_clase.ci_alumno = alumno.ci
             JOIN actividades ON clase.id_actividad = actividades.id
             JOIN instructores ON clase.ci_instructor = instructores.ci
             JOIN turnos ON clase.id_turno = turnos.id
