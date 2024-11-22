@@ -312,6 +312,20 @@ def generate_reports():
 
     return jsonify({"ingresos": ingresos, "alumnos": alumnos, "turnos": turnos})
 
+# GET de equipamientos
+@app.route('/equipamiento', methods=['GET'])
+def get_equipment():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM equipamiento")
+    equipamiento = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(equipamiento)
+
 
 # CRUD de clases
 @app.route('/clase', methods=['POST'])#Crear una clase
@@ -445,6 +459,68 @@ def delete_class(id):
         return jsonify({"message": "Clase eliminada exitosamente"}), 200
 
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/clase/<id_clase>/alumno', methods=['POST'])
+def agregar_alumno_a_clase(id_clase):
+    try:
+        # Obtener los datos enviados
+        data = request.get_json()
+        alumno = data.get('alumno')
+        equipamiento = data.get('equipamiento', [])  # Default to empty list if no equipamiento selected
+
+        if not alumno:
+            return jsonify({"error": "Alumno no seleccionado"}), 400
+
+        # Obtener la conexión y el cursor
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Verificar si la clase existe
+        cursor.execute("""
+            SELECT clase.id AS id_clase, actividades.id AS id_actividad
+            FROM clase
+            JOIN actividades ON clase.id_actividad = actividades.id
+            WHERE clase.id = %s
+        """, (id_clase,))
+        clase_info = cursor.fetchone()
+        if not clase_info:
+            return jsonify({"error": "Clase no encontrada"}), 404
+
+        id_actividad = clase_info['id_actividad']
+
+        # Obtener todos los equipamientos relacionados con la actividad
+        cursor.execute("""
+            SELECT equipamiento.id AS id_equipamiento
+            FROM actividad_equipamiento
+            JOIN equipamiento ON actividad_equipamiento.id_equipamiento = equipamiento.id
+            WHERE actividad_equipamiento.id_actividad = %s
+        """, (id_actividad,))
+        equipamiento_default = [equip['id_equipamiento'] for equip in cursor.fetchall()]
+
+        # Si no hay equipamiento seleccionado, asignar todos los equipamientos por defecto
+        if not equipamiento:
+            equipamiento = equipamiento_default
+
+        # Verificar que haya al menos un equipamiento asignado
+        if not equipamiento:
+            return jsonify({"error": "No se pudo asignar equipamiento. Verifique las relaciones en la base de datos."}), 500
+
+        # Insertar el alumno en la clase con cada equipamiento asignado
+        for equip in equipamiento:
+            cursor.execute("""
+                INSERT INTO alumno_clase (id_clase, ci_alumno, id_equipamiento)
+                VALUES (%s, %s, %s)
+            """, (id_clase, alumno['ci'], equip))
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        return jsonify({"message": "Alumno agregado exitosamente"}), 200
+    except Exception as e:
+        print(f"Error al agregar alumno a la clase: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/clases', methods=['GET'])#Sirve para obtener la clase, como queremos mostrar el nombre de la actividad hacemos el join con actividades

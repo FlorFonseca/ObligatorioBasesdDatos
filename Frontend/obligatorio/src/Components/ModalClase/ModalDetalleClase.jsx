@@ -1,9 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
+import ModalAgregarAlumnoAClase from "../ModalClase/ModalAgregarAlumnoAClase";
 
 const ModalDetallesClase = ({ clase, onClose }) => {
+  const [showAddAlumnoModal, setShowAddAlumnoModal] = useState(false);
+
+  const handleAgregarAlumno = () => {
+    setShowAddAlumnoModal(true); // Mostrar el modal para agregar alumnos
+  };
+
   // Manejo de posibles datos faltantes
-  const alumnos = clase.alumnos_inscritos 
-    ? clase.alumnos_inscritos.split(", ") 
+  const alumnos = clase.alumnos_inscritos
+    ? clase.alumnos_inscritos.split(", ")
     : [];
 
   return (
@@ -25,7 +32,15 @@ const ModalDetallesClase = ({ clase, onClose }) => {
             <li key={index}>{alumno}</li>
           ))}
         </ul>
-        <button>Agregar alumno</button>
+        <button onClick={handleAgregarAlumno}>Agregar alumno</button>
+        {showAddAlumnoModal && (
+          <ModalAgregarAlumnoAClase
+            clase={clase}
+            onClose={() => setShowAddAlumnoModal(false)}
+          />
+        )}
+
+        <button onClick={onClose}>Cerrar</button>
       </div>
     </div>
   );
