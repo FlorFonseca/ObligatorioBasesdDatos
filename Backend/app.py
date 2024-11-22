@@ -460,59 +460,84 @@ def delete_class(id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# obtener alumnos disponibles para una clase
+@app.route('/clase/<id_clase>/alumnos_disponibles', methods=['GET'])
+def obtener_alumnos_disponibles(id_clase):
+    try:
+        # Conexión a la base de datos
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
 
+        # Consulta para obtener únicamente los alumnos que no están inscritos en la clase
+        cursor.execute("""
+            SELECT al.ci, al.nombre, al.apellido
+            FROM alumnos al
+            WHERE al.ci NOT IN (
+                SELECT ac.ci_alumno
+                FROM alumno_clase ac
+                WHERE ac.id_clase = %s
+            )
+        """, (id_clase,))
+        alumnos_disponibles = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        # Devolver solo la lista de alumnos disponibles
+        return jsonify(alumnos_disponibles), 200
+    except Exception as e:
+        print(f"Error al obtener alumnos disponibles: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/clase/<id_clase>/alumno', methods=['POST'])
 def agregar_alumno_a_clase(id_clase):
     try:
         # Obtener los datos enviados
         data = request.get_json()
-        alumno = data.get('alumno')
-        equipamiento = data.get('equipamiento', [])  # Default to empty list if no equipamiento selected
+        alumno_ci = data.get('ci')  # Cambia según cómo recibas el CI del alumno
+        equipamiento = data.get('equipamiento', [])
 
-        if not alumno:
+        if not alumno_ci:
             return jsonify({"error": "Alumno no seleccionado"}), 400
 
-        # Obtener la conexión y el cursor
+        # Conexión a la base de datos
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Verificar si la clase existe
+        # Verificar si el alumno ya está inscrito en la clase
         cursor.execute("""
-            SELECT clase.id AS id_clase, actividades.id AS id_actividad
-            FROM clase
-            JOIN actividades ON clase.id_actividad = actividades.id
-            WHERE clase.id = %s
-        """, (id_clase,))
-        clase_info = cursor.fetchone()
-        if not clase_info:
-            return jsonify({"error": "Clase no encontrada"}), 404
+            SELECT 1
+            FROM alumno_clase
+            WHERE id_clase = %s AND ci_alumno = %s
+        """, (id_clase, alumno_ci))
+        ya_inscrito = cursor.fetchone()
 
-        id_actividad = clase_info['id_actividad']
+        if ya_inscrito:
+            return jsonify({"error": "El alumno ya está inscrito en esta clase"}), 400
 
-        # Obtener todos los equipamientos relacionados con la actividad
-        cursor.execute("""
-            SELECT equipamiento.id AS id_equipamiento
-            FROM actividad_equipamiento
-            JOIN equipamiento ON actividad_equipamiento.id_equipamiento = equipamiento.id
-            WHERE actividad_equipamiento.id_actividad = %s
-        """, (id_actividad,))
-        equipamiento_default = [equip['id_equipamiento'] for equip in cursor.fetchall()]
-
-        # Si no hay equipamiento seleccionado, asignar todos los equipamientos por defecto
+        # Verificar y asignar equipamiento si no se proporciona
         if not equipamiento:
-            equipamiento = equipamiento_default
+            cursor.execute("""
+                SELECT equipamiento.id AS id_equipamiento
+                FROM actividad_equipamiento
+                JOIN equipamiento ON actividad_equipamiento.id_equipamiento = equipamiento.id
+                WHERE actividad_equipamiento.id_actividad = (
+                    SELECT id_actividad FROM clase WHERE id = %s
+                )
+            """, (id_clase,))
+            equipamiento = [equip['id_equipamiento'] for equip in cursor.fetchall()]
 
-        # Verificar que haya al menos un equipamiento asignado
+        # Validar que exista al menos un equipamiento
         if not equipamiento:
             return jsonify({"error": "No se pudo asignar equipamiento. Verifique las relaciones en la base de datos."}), 500
 
-        # Insertar el alumno en la clase con cada equipamiento asignado
+        # Insertar el alumno y el equipamiento
         for equip in equipamiento:
             cursor.execute("""
                 INSERT INTO alumno_clase (id_clase, ci_alumno, id_equipamiento)
                 VALUES (%s, %s, %s)
-            """, (id_clase, alumno['ci'], equip))
+            """, (id_clase, alumno_ci, equip))
 
         connection.commit()
         cursor.close()
