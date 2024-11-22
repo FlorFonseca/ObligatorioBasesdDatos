@@ -542,7 +542,7 @@ def get_class():
             c.aforo, 
             c.dictada,
             a.costo AS costo_actividad,
-            IFNULL(SUM(e.costo), 0) AS costo_equipamiento, -- Suma de los costos del equipamiento utilizado
+            IFNULL(SUM(e.costo), 0) AS costo_equipamiento,
             GROUP_CONCAT(DISTINCT CONCAT(al.nombre, ' ', al.apellido) SEPARATOR ', ') AS alumnos_inscritos
         FROM 
             obligatorio.clase c
@@ -569,6 +569,60 @@ def get_class():
 
         return jsonify(clases), 200
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/clase/<id>', methods=['GET'])#Para obtener la información de una clase por el id
+def get_class_by_id(id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+        SELECT 
+            c.id AS id_clase,
+            a.descripcion AS nombre_actividad,
+            CONCAT(i.nombre, ' ', i.apellido) AS nombre_instructor,
+            CONCAT(t.hora_inicio, ' a ', t.hora_fin) AS turno,
+            i.ci AS ci_instructor,
+            a.id AS id_actividad,
+            t.id AS id_turno,
+            c.tipo_clase, 
+            c.aforo, 
+            c.dictada,
+            a.costo AS costo_actividad,
+            IFNULL(SUM(e.costo), 0) AS costo_equipamiento,
+            GROUP_CONCAT(DISTINCT CONCAT(al.nombre, ' ', al.apellido) SEPARATOR ', ') AS alumnos_inscritos
+        FROM 
+            obligatorio.clase c
+        JOIN 
+            obligatorio.actividades a ON c.id_actividad = a.id
+        JOIN 
+            obligatorio.instructores i ON c.ci_instructor = i.ci
+        JOIN 
+            obligatorio.turnos t ON c.id_turno = t.id
+        LEFT JOIN 
+            obligatorio.alumno_clase ac ON c.id = ac.id_clase
+        LEFT JOIN 
+            obligatorio.alumnos al ON ac.ci_alumno = al.ci
+        LEFT JOIN 
+            obligatorio.equipamiento e ON ac.id_equipamiento = e.id
+        WHERE id_clase = %s
+        """, (id,))
+
+
+        clase = cursor.fetchone()
+
+        if not clase:
+            cursor.close()
+            connection.close()
+            return jsonify({"error": "Clase no encontrada"}), 404
+
+        cursor.close()
+        connection.close()
+
+
+        return jsonify(clase), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
