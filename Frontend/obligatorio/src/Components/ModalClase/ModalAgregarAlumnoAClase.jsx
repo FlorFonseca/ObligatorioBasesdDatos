@@ -11,7 +11,7 @@ const ModalAgregarAlumnoAClase = ({ clase, onClose }) => {
     useEffect(() => {
         const fetchAlumnos = async () => {
             try {
-                const response = await fetch("http://localhost:5000/alumnos");
+                const response = await fetch(`http://localhost:5000/clase/${clase.id_clase}/alumnos_disponibles`);
                 const data = await response.json();
                 setAlumnos(data);
             } catch (error) {
@@ -83,20 +83,26 @@ const ModalAgregarAlumnoAClase = ({ clase, onClose }) => {
                 {/* Lista de alumnos */}
                 <div>
                     <h4>Selecciona un Alumno</h4>
-                    {alumnos.map((alumno) => (
-                        <div key={alumno.ci}>
-                            <input
-                                type="radio"
-                                id={alumno.ci}
-                                name="alumno"
-                                value={alumno.ci}
-                                onChange={() => handleSelectAlumno(alumno)}
-                            />
-                            <label htmlFor={alumno.ci}>
-                                {alumno.nombre} {alumno.apellido}
-                            </label>
+                    {alumnos.length > 0 ? (
+                        <div>
+                            {alumnos.map((alumno) => (
+                                <div key={alumno.ci}>
+                                    <input
+                                        type="radio"
+                                        id={alumno.ci}
+                                        name="alumno"
+                                        value={alumno.ci}
+                                        onChange={() => handleSelectAlumno(alumno)}
+                                    />
+                                    <label htmlFor={alumno.ci}>
+                                        {alumno.nombre} {alumno.apellido}
+                                    </label>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    ) : (
+                        <p>No hay alumnos disponibles</p>
+                    )}
                 </div>
 
                 {/* Lista de equipamiento */}
