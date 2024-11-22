@@ -35,7 +35,7 @@ export default function ClassCard({
         <button onClick={() => onEdit(clase)} className="btn btn-edit">
           Editar
         </button>
-        <button onClick={() => onDetails(clase)} className="btn btn-details">
+        <button onClick={() => onDetails(clase.id_clase)} className="btn btn-details">
           Detalles
         </button>
         <button

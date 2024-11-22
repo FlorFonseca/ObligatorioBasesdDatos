@@ -4,16 +4,15 @@ import ClassCard from "../../Components/Card/ClassCard";
 import ModalAgregarClase from "../../Components/ModalClase/ModalAgregarClase";
 import ModalEditarClase from "../../Components/ModalClase/ModalEditarClase";
 import Modal from "../../Components/Modal/Modal";
-import ModalDetallesClase from "../../Components/ModalClase/ModalDetalleClase";
+//import ModalDetallesClase from "../../Components/ModalClase/ModalDetalleClase";
+import { useNavigate } from "react-router-dom";
 
 export default function Clases() {
   const [clases, setClases] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("add");
-
-  console.log(clases);
-  //el back devuelve una lista de todas las clases
+  const navigate = useNavigate();
 
   const handleGetClases = async () => {
     try {
@@ -35,9 +34,7 @@ export default function Clases() {
     handleGetClases();
   }, []);
 
-  
   const handleAddClass = async (newClass) => {
-    console.log("Datos enviados:", newClass); 
     try {
       const response = await fetch("http://localhost:5000/clase", {
         method: "POST",
@@ -49,7 +46,6 @@ export default function Clases() {
 
       if (response.ok) {
         const addedClass = await response.json();
-        console.log(addedClass);
         setClases((prevClases) => [...prevClases, newClass]);
         handleGetClases();
         setShowModal(false);
@@ -75,7 +71,6 @@ export default function Clases() {
 
       if (response.ok) {
         const updatedData = await response.json();
-        console.log("Clase actualizada:", updatedData);
         setClases((prevClases) =>
           prevClases.map((clase) =>
             clase.id_clase === updatedData.id_clase ? updatedData : clase
@@ -93,10 +88,13 @@ export default function Clases() {
 
   const handleDeleteClass = async (deletedClass) => {
     try {
-      const response = await fetch(`http://localhost:5000/clase/${deletedClass.id_clase}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await fetch(
+        `http://localhost:5000/clase/${deletedClass.id_clase}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (response.ok) {
         const classDeleted = await response.json();
@@ -124,9 +122,16 @@ export default function Clases() {
     setSelectedClass(null);
   };
 
+  const handleDetails = (id) => {
+    navigate(`/clases/${id}`); // Redirige a la página de detalles
+  };
+
   return (
     <div className="container">
       <h1 className="titulo-clases">Gestión de Clases</h1>
+      <button className="back-button" onClick={() => navigate(-1)}>
+        Back
+      </button>
 
       {/* Formulario para agregar clases */}
       <button onClick={() => handleOpenModal("add")}>Agregar Clase</button>
@@ -146,7 +151,7 @@ export default function Clases() {
               aforo={clase.aforo}
               dictada={clase.dictada}
               onEdit={() => handleOpenModal("edit", clase)}
-              onDetails={() => handleOpenModal("details", clase)}
+              onDetails={() => handleDetails(clase.id_clase)}
               onDelete={() => handleDeleteClass(clase)}
             />
           ))
@@ -155,14 +160,17 @@ export default function Clases() {
         )}
       </div>
 
-        {showModal && (
+      {showModal && (
         <Modal onClose={handleCloseModal}>
           {modalType === "add" && <ModalAgregarClase onAdd={handleAddClass} />}
-          {modalType === "edit" && <ModalEditarClase clase={selectedClass} onSubmit={handleEditClass} />}
-          {modalType === "details" && <ModalDetallesClase clase={selectedClass} onClose={handleCloseModal} />}
+          {modalType === "edit" && (
+            <ModalEditarClase
+              clase={selectedClass}
+              onSubmit={handleEditClass}
+            />
+          )}
         </Modal>
       )}
-      
     </div>
   );
 }
