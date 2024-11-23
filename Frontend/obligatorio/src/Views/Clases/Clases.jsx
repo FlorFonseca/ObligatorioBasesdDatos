@@ -36,6 +36,7 @@ export default function Clases() {
 
   const handleAddClass = async (newClass) => {
     try {
+      console.log("Datos enviados para crear la clase:", newClass); // Log de los datos enviados
       const response = await fetch("http://localhost:5000/clase", {
         method: "POST",
         headers: {
@@ -46,7 +47,7 @@ export default function Clases() {
 
       if (response.ok) {
         const addedClass = await response.json();
-        setClases((prevClases) => [...prevClases, newClass]);
+        setClases((prevClases) => [...prevClases, addedClass]);
         handleGetClases();
         setShowModal(false);
       } else {
@@ -162,7 +163,7 @@ export default function Clases() {
 
       {showModal && (
         <Modal onClose={handleCloseModal}>
-          {modalType === "add" && <ModalAgregarClase onAdd={handleAddClass} />}
+          {modalType === "add" && <ModalAgregarClase onSubmit={handleAddClass} />}
           {modalType === "edit" && (
             <ModalEditarClase
               clase={selectedClass}
