@@ -571,6 +571,65 @@ def agregar_alumno_a_clase(id_clase):
         print(f"Error al agregar alumno a la clase: {e}")
         return jsonify({"error": str(e)}), 500
 
+#verificar los instructores disponibles
+@app.route('/clase/<id_clase>/instructores_disponibles', methods=['GET'])
+def obtener_instructores_disponibles(id_clase):
+    try:
+        # Conexión a la base de datos
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Consulta para obtener únicamente los instructores que no están asignados a la clase
+        cursor.execute("""
+            SELECT inst.ci, inst.nombre, inst.apellido
+            FROM instructores inst
+            WHERE inst.ci NOT IN (
+                SELECT cl.ci_instructor
+                FROM clase cl
+                WHERE cl.id = %s
+            )
+        """, (id_clase,))
+        instructores_disponibles = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        # Devolver solo la lista de instructores disponibles
+        return jsonify(instructores_disponibles), 200
+    except Exception as e:
+        print(f"Error al obtener instructores disponibles: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+
+# Obtener los turnos disponibles para una clase
+@app.route('/clase/<id_clase>/turnos_disponibles', methods=['GET'])
+def obtener_turnos_disponibles(id_clase):
+    try:
+        # Conexión a la base de datos
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Consulta para obtener los turnos disponibles
+        #Usamos time format ya que en la bd estamos guardando de tipo TIME y al obtenerlas del backend python las interpreta como timedelta
+        cursor.execute("""
+            SELECT t.id, 
+                       TIME_FORMAT(t.hora_inicio, '%H:%i:%s') AS hora_inicio, 
+                   TIME_FORMAT(t.hora_fin, '%H:%i:%s') AS hora_fin
+            FROM turnos t
+        """)
+        turnos_disponibles = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        # Devolver los turnos disponibles
+        return jsonify(turnos_disponibles), 200
+    except Exception as e:
+        print(f"Error al obtener turnos disponibles: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/clases', methods=['GET'])#Sirve para obtener la clase, como queremos mostrar el nombre de la actividad hacemos el join con actividades
 def get_class():
     try:

@@ -1,16 +1,51 @@
 import React, { useState, useEffect } from "react";
 import "../ModalAgregarEditar.css";
 
-const ModalEditarClase = ({clase, onSubmit}) => {
+const ModalEditarClase = ({ clase, onSubmit }) => {
   const [formData, setFormData] = useState(clase);
-
+  const [availableInstructorsCi, setAvailableInstructorsCi] = useState([]);
+  const [availableTurnos, setAvailableTurnos] = useState([]);
 
   useEffect(() => {
-      setFormData(clase);
+    setFormData(clase);
   }, [clase]);
 
+  useEffect(() => {
+    const fetchInstructores = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/clase/${clase.id_clase}/instructores_disponibles`
+        );
+        const data = await response.json();
+        setAvailableInstructorsCi(data);
+      } catch (error) {
+        console.error("Error al obtener instructores:", error);
+      }
+    };
 
-    console.log("clase a editar", clase);
+    fetchInstructores();
+  }, [clase.id_clase]);
+
+  // Obtener turnos disponibles
+  useEffect(() => {
+    const fetchTurnos = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/clase/${clase.id_clase}/turnos_disponibles`
+        );
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setAvailableTurnos(data);
+        } else {
+          console.error("Respuesta de API no es un array:", data);
+        }
+      } catch (error) {
+        console.error("Error al obtener turnos:", error);
+      }
+    };
+
+    fetchTurnos();
+  }, [clase.id_clase]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -39,14 +74,20 @@ const ModalEditarClase = ({clase, onSubmit}) => {
         disabled
       />
       <label htmlFor="ciInstructor">CI Instructor:</label>
-      <input
-        type="number"
+      <select
         id="ciInstructor"
         name="ci_instructor"
         value={formData.ci_instructor}
         onChange={handleChange}
         required
-      />
+      >
+        <option value="">Seleccionar...</option>
+        {availableInstructorsCi.map((instructor) => (
+          <option key={instructor.ci} value={instructor.ci}>
+            {instructor.nombre} {instructor.apellido} (CI: {instructor.ci})
+          </option>
+        ))}
+      </select>
       <label htmlFor="idActividad">ID Actividad:</label>
       <input
         type="text"
@@ -57,14 +98,20 @@ const ModalEditarClase = ({clase, onSubmit}) => {
         required
       />
       <label htmlFor="idTurno">ID Turno:</label>
-      <input
-        type="text"
+      <select
         id="idTurno"
         name="id_turno"
         value={formData.id_turno}
         onChange={handleChange}
         required
-      />
+      >
+        <option value="">Seleccionar...</option>
+        {availableTurnos.map((turno) => (
+          <option key={turno.id} value={turno.id}>
+            ({turno.hora_inicio} - {turno.hora_fin})
+          </option>
+        ))}
+      </select>
       <label htmlFor="tipoClase">Tipo Clase:</label>
       <select
         name="tipo_clase"
