@@ -326,6 +326,29 @@ def get_equipment():
 
     return jsonify(equipamiento)
 
+@app.route('/clase/<id_clase>/equipamiento', methods=['GET'])
+def obtener_equipamiento_para_clase(id_clase):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT e.id, e.descripcion
+            FROM equipamiento e
+            JOIN actividad_equipamiento ae ON e.id = ae.id_equipamiento
+            JOIN clase c ON ae.id_actividad = c.id_actividad
+            WHERE c.id = %s
+        """, (id_clase,))
+        equipamiento = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify(equipamiento), 200
+    except Exception as e:
+        print(f"Error al obtener equipamiento para la clase: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 # CRUD de clases
 @app.route('/clase', methods=['POST'])
