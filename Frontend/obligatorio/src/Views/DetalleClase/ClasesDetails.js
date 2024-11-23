@@ -9,23 +9,25 @@ export default function ClasesDetails() {
   const [clase, setClase] = useState(null);
   const [showAddAlumnoModal, setShowAddAlumnoModal] = useState(false);
 
-  useEffect(() => {
-    const fetchClase = async () => {
-      try {
-        const response = await fetch(`http://localhost:5000/clase/${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setClase(data);
-        } else {
-          console.error("Error al obtener los detalles de la clase.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
+  // Función para obtener los detalles de la clase
+  const fetchClase = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/clase/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setClase(data);
+      } else {
+        console.error("Error al obtener los detalles de la clase.");
       }
-    };
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
+  // Llamada inicial para obtener los detalles de la clase
+  useEffect(() => {
     fetchClase();
-  },[id]);
+  }, [id]);
 
   if (!clase) {
     return <p>Cargando detalles de la clase...</p>;
@@ -35,7 +37,7 @@ export default function ClasesDetails() {
     ? clase.alumnos_inscritos.split(", ")
     : [];
 
- const handleAgregarAlumno = () => {
+  const handleAgregarAlumno = () => {
     setShowAddAlumnoModal(true);
   };
 
@@ -77,7 +79,10 @@ export default function ClasesDetails() {
       {showAddAlumnoModal && (
         <ModalAgregarAlumnoAClase
           clase={clase}
-          onClose={() => setShowAddAlumnoModal(false)}
+          onClose={() => {
+            setShowAddAlumnoModal(false);
+            fetchClase(); // Recargar los detalles de la clase después de cerrar el modal
+          }}
         />
       )}
     </div>

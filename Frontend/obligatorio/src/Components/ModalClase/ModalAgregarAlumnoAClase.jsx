@@ -7,19 +7,17 @@ const ModalAgregarAlumnoAClase = ({ clase, onClose }) => {
     const [selectedAlumno, setSelectedAlumno] = useState(null);
     const [selectedEquipamiento, setSelectedEquipamiento] = useState([]);
 
-    // Obtener los alumnos y equipamiento disponibles al cargar el modal
-    useEffect(() => {
-        const fetchAlumnos = async () => {
-            try {
-                const response = await fetch(`http://localhost:5000/clase/${clase.id_clase}/alumnos_disponibles`);
-                const data = await response.json();
-                setAlumnos(data);
-            } catch (error) {
-                console.error("Error al obtener alumnos:", error);
-            }
-        };
+    const fetchAlumnos = async () => {
+        try {
+            const response = await fetch(`http://localhost:5000/clase/${clase.id_clase}/alumnos_disponibles`);
+            const data = await response.json();
+            setAlumnos(data);
+        } catch (error) {
+            console.error("Error al obtener alumnos:", error);
+        }
+    };
 
-        const fetchEquipamiento = async () => {
+    const fetchEquipamiento = async () => {
             try {
                 const response = await fetch("http://localhost:5000/equipamiento");
                 const data = await response.json();
@@ -29,6 +27,8 @@ const ModalAgregarAlumnoAClase = ({ clase, onClose }) => {
             }
         };
 
+    // Obtener los alumnos y equipamiento disponibles al cargar el modal
+    useEffect(() => {
         fetchAlumnos();
         fetchEquipamiento();
     }, [clase]);
@@ -54,14 +54,12 @@ const ModalAgregarAlumnoAClase = ({ clase, onClose }) => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        alumno: selectedAlumno,
+                        ci: selectedAlumno.ci,
                         equipamiento: selectedEquipamiento,
                     }),
                 });
                 if (response.ok) {
-                    // Recargar los alumnos
-                    const data = await response.json();
-                    setAlumnos(data); // Actualizar la lista de alumnos
+                    fetchAlumnos(); // Actualizar la lista de alumnos disponibles
                     console.log("Alumno agregado exitosamente");
                     onClose(); // Cerrar el modal después de agregar el alumno
                 } else {
