@@ -616,7 +616,16 @@ def get_class_by_id(id):
             c.aforo, 
             c.dictada,
             a.costo AS costo_actividad,
-            IFNULL(SUM(e.costo), 0) AS costo_equipamiento,
+            (
+                SELECT 
+                    IFNULL(SUM(e.costo), 0)
+                FROM 
+                    obligatorio.equipamiento e
+                JOIN 
+                    obligatorio.actividad_equipamiento ae ON e.id = ae.id_equipamiento
+                WHERE 
+                    ae.id_actividad = c.id_actividad
+            ) AS costo_equipamiento,
             GROUP_CONCAT(DISTINCT CONCAT(al.nombre, ' ', al.apellido) SEPARATOR ', ') AS alumnos_inscritos
         FROM 
             obligatorio.clase c
@@ -630,8 +639,6 @@ def get_class_by_id(id):
             obligatorio.alumno_clase ac ON c.id = ac.id_clase
         LEFT JOIN 
             obligatorio.alumnos al ON ac.ci_alumno = al.ci
-        LEFT JOIN 
-            obligatorio.equipamiento e ON ac.id_equipamiento = e.id
         WHERE id_clase = %s
         """, (id,))
 
