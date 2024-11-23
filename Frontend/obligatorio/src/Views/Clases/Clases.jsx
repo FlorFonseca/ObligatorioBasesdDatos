@@ -36,6 +36,7 @@ export default function Clases() {
 
   const handleAddClass = async (newClass) => {
     try {
+      console.log("Datos enviados para crear la clase:", newClass); // Log de los datos enviados
       const response = await fetch("http://localhost:5000/clase", {
         method: "POST",
         headers: {

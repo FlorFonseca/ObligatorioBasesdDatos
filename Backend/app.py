@@ -328,13 +328,32 @@ def get_equipment():
 
 
 # CRUD de clases
-@app.route('/clase', methods=['POST'])#Crear una clase
+@app.route('/clase', methods=['POST'])
 def create_class():
     try:
         data = request.get_json()
-        id_clase, ci_instructor, id_actividad, id_turno, tipo_clase, aforo = data['id'], data['ci_instructor'], data['id_actividad'], data['id_turno'], data['tipo_clase'], data['aforo']
+        print("Datos recibidos:", data)  # Log de los datos recibidos
+        id_clase = data['id']
+        ci_instructor = int(data['ci_instructor'])
+        id_actividad = data['id_actividad']
+        id_turno = data['id_turno']
+        dictada = data['dictada']
+        tipo_clase = data['tipo_clase']
+        aforo = int(data['aforo'])
+
+        if not isinstance(dictada, bool):
+            dictada = dictada.lower() == "true"
+
         connection = get_db_connection()
         cursor = connection.cursor()
+
+        # Verificar que el ci_instructor exista en la tabla instructores
+        cursor.execute("SELECT COUNT(*) FROM instructores WHERE ci = %s", (ci_instructor,))
+        instructor_exists = cursor.fetchone()[0]
+
+        if instructor_exists == 0:
+            return jsonify({"error": "El instructor con el CI proporcionado no existe"}), 400
+
 
         # Validar que el instructor no tenga otra clase en el mismo turno
         cursor.execute("""
@@ -343,15 +362,18 @@ def create_class():
             WHERE ci_instructor = %s AND id_turno = %s
         """, (ci_instructor, id_turno))
         conflict = cursor.fetchone()
+
         if conflict[0] > 0:
             return jsonify({"error": "El instructor ya tiene una clase asignada en este turno"}), 400
 
         # Insertar la clase
         cursor.execute("""
             INSERT INTO clase (id, ci_instructor, id_actividad, id_turno, dictada, tipo_clase, aforo)
-            VALUES (%s, %s, %s, %s, false, %s, %s)
-        """, (id_clase, ci_instructor, id_actividad, id_turno, tipo_clase, aforo))
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (id_clase, ci_instructor, id_actividad, id_turno,dictada, tipo_clase, aforo))
         connection.commit()
+
+        
 
         cursor.close()
         connection.close()
@@ -360,6 +382,7 @@ def create_class():
     except Exception as e:
         print("Error al crear la clase:", str(e))  # Imprime el error en la consola del servidor
         return jsonify({"error": "Error interno del servidor: " + str(e)}), 500
+
 
 
 @app.route('/clase/<id>', methods=['PUT'])#Para modificar la clase
