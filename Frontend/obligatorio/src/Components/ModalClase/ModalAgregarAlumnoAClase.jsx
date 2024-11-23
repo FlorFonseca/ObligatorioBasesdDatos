@@ -19,7 +19,7 @@ const ModalAgregarAlumnoAClase = ({ clase, onClose }) => {
 
     const fetchEquipamiento = async () => {
             try {
-                const response = await fetch("http://localhost:5000/equipamiento");
+                const response = await fetch(`http://localhost:5000/clase/${clase.id_clase}/equipamiento`);
                 const data = await response.json();
                 setEquipamiento(data);
             } catch (error) {
