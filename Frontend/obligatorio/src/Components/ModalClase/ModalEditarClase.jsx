@@ -82,6 +82,7 @@ const ModalEditarClase = ({ clase, onSubmit }) => {
         required
       >
         <option value="">Seleccionar...</option>
+        <option>{formData.ci_instructor}</option>
         {availableInstructorsCi.map((instructor) => (
           <option key={instructor.ci} value={instructor.ci}>
             {instructor.nombre} {instructor.apellido} (CI: {instructor.ci})
