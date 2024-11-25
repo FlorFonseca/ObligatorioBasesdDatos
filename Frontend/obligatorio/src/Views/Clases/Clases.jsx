@@ -4,8 +4,8 @@ import ClassCard from "../../Components/Card/ClassCard";
 import ModalAgregarClase from "../../Components/ModalClase/ModalAgregarClase";
 import ModalEditarClase from "../../Components/ModalClase/ModalEditarClase";
 import Modal from "../../Components/Modal/Modal";
-//import ModalDetallesClase from "../../Components/ModalClase/ModalDetalleClase";
 import { useNavigate } from "react-router-dom";
+
 
 export default function Clases() {
   const [clases, setClases] = useState([]);
@@ -89,28 +89,40 @@ export default function Clases() {
 
   const handleDeleteClass = async (deletedClass) => {
     try {
+      // Realizar la solicitud DELETE al servidor
       const response = await fetch(
         `http://localhost:5000/clase/${deletedClass.id_clase}`,
         {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
+      // Verificar si la respuesta es correcta
       if (response.ok) {
-        const classDeleted = await response.json();
+        const result = await response.json(); // Procesar la respuesta en JSON
+
+        // Actualizar el estado de las clases eliminando la clase eliminada
         setClases((prevClases) =>
-          prevClases.filter((clase) => clase.id_clase !== classDeleted.id_clase)
+          prevClases.filter((clase) => clase.id_clase !== deletedClass.id_clase)
         );
-        handleGetClases();
-        setShowModal(false);
+
+        console.log(result.message || "Clase eliminada exitosamente.");
       } else {
-        console.error("Error al eliminar la clase.");
+        // Manejar errores específicos enviados por el backend
+        const errorData = await response.json();
+        alert(
+          errorData.error
+        );
       }
     } catch (error) {
-      console.error("Error al eliminar la clase:", error);
+      // Manejar errores de conexión u otros imprevistos
+      console.error("Error al eliminar la clase:", error.message);
     }
   };
+
 
   const handleOpenModal = (type, clase = null) => {
     setModalType(type);

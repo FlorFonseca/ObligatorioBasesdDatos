@@ -1,8 +1,8 @@
-import datetime
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from config import get_db_connection
-from datetime import timedelta
+from datetime import timedelta, datetime
+
 
 app = Flask(__name__)
 CORS(app)
@@ -446,13 +446,14 @@ def update_class(id):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/clase/<id>', methods=['DELETE'])#Eliminar una clase
+
+@app.route('/clase/<id>', methods=['DELETE'])
 def delete_class(id):
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Verificar si la clase existe y si no está en horario
+        # Verificar si la clase existe y obtener sus horarios
         cursor.execute("""
             SELECT clase.id, turnos.hora_inicio, turnos.hora_fin
             FROM clase
@@ -460,18 +461,26 @@ def delete_class(id):
             WHERE clase.id = %s
         """, (id,))
         clase = cursor.fetchone()
+
         if not clase:
             return jsonify({"error": "Clase no encontrada"}), 404
 
-        hora_actual = datetime.datetime.now().time()
+        # Convertir horas si son timedelta
+        hora_actual = datetime.now().time()
         hora_inicio = clase[1]
         hora_fin = clase[2]
-        if isinstance(hora_inicio, datetime.timedelta): #Esta parte sirve para convertir los datos a datetime, sino da un error al editar
-            hora_inicio = (datetime.datetime.min + hora_inicio).time()
-        if isinstance(hora_fin, datetime.timedelta):
-            hora_fin = (datetime.datetime.min + hora_fin).time()
+
+        if isinstance(hora_inicio, timedelta):
+            hora_inicio = (datetime.min + hora_inicio).time()
+        if isinstance(hora_fin, timedelta):
+            hora_fin = (datetime.min + hora_fin).time()
+
+        # Validar que no esté en horario
         if hora_inicio <= hora_actual <= hora_fin:
             return jsonify({"error": "No se puede modificar una clase durante su horario"}), 400
+
+        # Eliminar dependencias en alumno_clase
+        cursor.execute("DELETE FROM alumno_clase WHERE id_clase = %s", (id,))
 
         # Eliminar la clase
         cursor.execute("DELETE FROM clase WHERE id = %s", (id,))
@@ -482,7 +491,9 @@ def delete_class(id):
         return jsonify({"message": "Clase eliminada exitosamente"}), 200
 
     except Exception as e:
+        print(f"Error al eliminar la clase: {e}")
         return jsonify({"error": str(e)}), 500
+
     
 # obtener alumnos disponibles para una clase
 @app.route('/clase/<id_clase>/alumnos_disponibles', methods=['GET'])
