@@ -21,7 +21,7 @@ El siguiente paso se deja a preferencia del usuario, desde el equipo recomendamo
 #### Terminal Backend
 Usamos el comando ```python app.py``` para poder ejecutar el ```backend```.
 ```bash
-directorio/del/proyecto/ObligatorioBasesdDatos/cd Backend 
+directorio/del/proyecto/ObligatorioBasesdDatos/ cd Backend 
 
 directorio/del/proyecto/ObligatorioBasesdDatos/Backend python app.py
 ```
@@ -29,7 +29,7 @@ directorio/del/proyecto/ObligatorioBasesdDatos/Backend python app.py
 #### Terminal Frontend
 En esta terminal debemos instalar las dependencias necesarias primero (por ejemplo las dependencias de React):
 ```bash
-directorio/del/proyecto/ObligatorioBasesdDatos/cd Frontend
+directorio/del/proyecto/ObligatorioBasesdDatos/ cd Frontend
 
 directorio/del/proyecto/ObligatorioBasesdDatos/Frontend npm install
 ```
