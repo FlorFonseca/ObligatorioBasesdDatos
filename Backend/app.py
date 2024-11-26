@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from config import get_db_connection
 from datetime import timedelta
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -349,27 +350,6 @@ def obtener_equipamiento_para_clase(id_clase):
         print(f"Error al obtener equipamiento para la clase: {e}")
         return jsonify({"error": str(e)}), 500
     
-# obtener alumnos inscritos en una clase
-@app.route('/clase/<int:id_clase>/alumnos', methods=['GET'])
-def obtener_alumnos_clase(id_clase):
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
-
-        cursor.execute("""SELECT al.ci, al.nombre, al.apellido
-                        FROM alumno_clase ac
-                       JOIN alumno al ON ac.ci_alumno = al.ci
-                       JOIN clase c ON ac.id_clase = c.id
-                       WHERE c.id = %s""", (id_clase,))
-        alumnos = cursor.fetchall()
-        cursor.close()
-        connection.close()
-        return jsonify(alumnos)
-    except Exception as e:
-        print(f"Error al obtener alumnos de la clase: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
 # CRUD de clases
 @app.route('/clase', methods=['POST'])
 def create_class():
