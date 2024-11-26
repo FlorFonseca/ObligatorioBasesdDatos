@@ -37,6 +37,24 @@
   color: #555;
 }
 
+ .eliminar-alumno  {
+  display: block !important;
+  margin: 3px !important;
+  padding: 3px !important;
+  font-size: 1rem !important;
+  color: #fff !important;
+  background-color: #dc3545 !important;
+  border: none !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.alumno-container {
+  margin-right: 50%;
+  margin-bottom: 50%;
+ }
+
 .detalle-clase button {
   display: block;
   margin: 1.5rem auto;
@@ -58,3 +76,4 @@
   outline: none;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
 }
+

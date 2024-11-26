@@ -348,6 +348,26 @@ def obtener_equipamiento_para_clase(id_clase):
     except Exception as e:
         print(f"Error al obtener equipamiento para la clase: {e}")
         return jsonify({"error": str(e)}), 500
+    
+# obtener alumnos inscritos en una clase
+@app.route('/clase/<int:id_clase>/alumnos', methods=['GET'])
+def obtener_alumnos_clase(id_clase):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""SELECT al.ci, al.nombre, al.apellido
+                        FROM alumno_clase ac
+                       JOIN alumno al ON ac.ci_alumno = al.ci
+                       JOIN clase c ON ac.id_clase = c.id
+                       WHERE c.id = %s""", (id_clase,))
+        alumnos = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return jsonify(alumnos)
+    except Exception as e:
+        print(f"Error al obtener alumnos de la clase: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # CRUD de clases
@@ -660,6 +680,43 @@ def obtener_turnos_disponibles(id_clase):
     except Exception as e:
         print(f"Error al obtener turnos disponibles: {e}")
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/clase/<id_clase>/alumno/<ci_alumno>', methods=['DELETE'])
+def eliminar_alumno_de_clase(id_clase, ci_alumno):
+    try:
+        # Conectar a la base de datos
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Verificar si el alumno está inscrito en la clase
+        cursor.execute("""
+            SELECT 1
+            FROM alumno_clase
+            WHERE id_clase = %s AND ci_alumno = %s
+        """, (id_clase, ci_alumno))
+        inscrito = cursor.fetchone()
+
+        if not inscrito:
+            cursor.close()
+            connection.close()
+            return jsonify({"error": "El alumno no está inscrito en esta clase"}), 404
+
+        # Eliminar la relación entre el alumno y la clase
+        cursor.execute("""
+            DELETE FROM alumno_clase
+            WHERE id_clase = %s AND ci_alumno = %s
+        """, (id_clase, ci_alumno))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({"message": "Alumno eliminado de la clase exitosamente"}), 200
+
+    except Exception as e:
+        print(f"Error al eliminar alumno de la clase: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 
 @app.route('/clases', methods=['GET'])#Sirve para obtener la clase, como queremos mostrar el nombre de la actividad hacemos el join con actividades
@@ -711,12 +768,13 @@ def get_class():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/clase/<id>', methods=['GET'])#Para obtener la información de una clase por el id
+@app.route('/clase/<id>', methods=['GET'])  # Para obtener la información de una clase por el id
 def get_class_by_id(id):
     try:
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
+        # Consulta para obtener los detalles de la clase
         cursor.execute("""
         SELECT 
             c.id AS id_clase,
@@ -739,8 +797,7 @@ def get_class_by_id(id):
                     obligatorio.actividad_equipamiento ae ON e.id = ae.id_equipamiento
                 WHERE 
                     ae.id_actividad = c.id_actividad
-            ) AS costo_equipamiento,
-            GROUP_CONCAT(DISTINCT CONCAT(al.nombre, ' ', al.apellido) SEPARATOR ', ') AS alumnos_inscritos
+            ) AS costo_equipamiento
         FROM 
             obligatorio.clase c
         JOIN 
@@ -749,13 +806,9 @@ def get_class_by_id(id):
             obligatorio.instructores i ON c.ci_instructor = i.ci
         JOIN 
             obligatorio.turnos t ON c.id_turno = t.id
-        LEFT JOIN 
-            obligatorio.alumno_clase ac ON c.id = ac.id_clase
-        LEFT JOIN 
-            obligatorio.alumnos al ON ac.ci_alumno = al.ci
-        WHERE id_clase = %s
+        WHERE 
+            c.id = %s
         """, (id,))
-
 
         clase = cursor.fetchone()
 
@@ -764,13 +817,32 @@ def get_class_by_id(id):
             connection.close()
             return jsonify({"error": "Clase no encontrada"}), 404
 
+        # Consulta para obtener los alumnos inscritos en la clase
+        cursor.execute("""
+        SELECT 
+            al.ci, 
+            al.nombre, 
+            al.apellido 
+        FROM 
+            obligatorio.alumnos al
+        JOIN 
+            obligatorio.alumno_clase ac ON al.ci = ac.ci_alumno
+        WHERE 
+            ac.id_clase = %s
+        """, (id,))
+
+        alumnos_inscritos = cursor.fetchall()
+
+        # Agregar los alumnos inscritos al objeto de la clase
+        clase['alumnos_inscritos'] = alumnos_inscritos
+
         cursor.close()
         connection.close()
-
 
         return jsonify(clase), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
