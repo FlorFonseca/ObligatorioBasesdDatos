@@ -2,7 +2,7 @@ import datetime
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from config import get_db_connection
-from datetime import timedelta
+from datetime import timedelta, date
 
 app = Flask(__name__)
 CORS(app)
@@ -524,9 +524,23 @@ def obtener_alumnos_disponibles(id_clase):
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Consulta para obtener únicamente los alumnos que no están inscritos en la clase
+        # Obtener la restricción de edad de la clase
         cursor.execute("""
-            SELECT al.ci, al.nombre, al.apellido
+            SELECT actividades.restriccion_edad
+            FROM clase
+            JOIN actividades ON clase.id_actividad = actividades.id
+            WHERE clase.id = %s
+        """, (id_clase,))
+        restriccion_edad = cursor.fetchone()
+
+        if not restriccion_edad:
+            return jsonify({"error": "La clase no tiene una actividad válida asociada"}), 400
+
+        restriccion_edad = restriccion_edad['restriccion_edad']
+
+        # Consulta para obtener alumnos no inscritos en la clase
+        cursor.execute("""
+            SELECT al.ci, al.nombre, al.apellido, al.fecha_nacimiento
             FROM alumnos al
             WHERE al.ci NOT IN (
                 SELECT ac.ci_alumno
@@ -534,7 +548,19 @@ def obtener_alumnos_disponibles(id_clase):
                 WHERE ac.id_clase = %s
             )
         """, (id_clase,))
-        alumnos_disponibles = cursor.fetchall()
+        alumnos = cursor.fetchall()
+
+        # Filtrar alumnos por restricción de edad
+        alumnos_disponibles = []
+        for alumno in alumnos:
+            fecha_nacimiento = alumno['fecha_nacimiento']
+            edad = (date.today() - fecha_nacimiento).days // 365
+            if edad >= restriccion_edad:
+                alumnos_disponibles.append({
+                    "ci": alumno['ci'],
+                    "nombre": alumno['nombre'],
+                    "apellido": alumno['apellido']
+                })
 
         cursor.close()
         connection.close()
@@ -548,30 +574,56 @@ def obtener_alumnos_disponibles(id_clase):
 @app.route('/clase/<id_clase>/alumno', methods=['POST'])
 def agregar_alumno_a_clase(id_clase):
     try:
-        # Obtener los datos enviados
         data = request.get_json()
-        alumno_ci = data.get('ci')  # Cambia según cómo recibas el CI del alumno
+        alumno_ci = data.get('ci')
         equipamiento = data.get('equipamiento', [])
 
         if not alumno_ci:
             return jsonify({"error": "Alumno no seleccionado"}), 400
 
-        # Conexión a la base de datos
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Verificar si el alumno ya está inscrito en la clase
+        # Verificar si el alumno ya está inscrito
         cursor.execute("""
             SELECT 1
             FROM alumno_clase
             WHERE id_clase = %s AND ci_alumno = %s
         """, (id_clase, alumno_ci))
-        ya_inscrito = cursor.fetchone()
-
-        if ya_inscrito:
+        if cursor.fetchone():
             return jsonify({"error": "El alumno ya está inscrito en esta clase"}), 400
 
-        # Verificar y asignar equipamiento si no se proporciona
+        # Obtener restricción de edad de la actividad
+        cursor.execute("""
+            SELECT actividad.restriccion_edad
+            FROM clase
+            JOIN actividad ON clase.id_actividad = actividad.id
+            WHERE clase.id = %s
+        """, (id_clase,))
+        restriccion_edad = cursor.fetchone()
+
+        if not restriccion_edad or 'restriccion_edad' not in restriccion_edad:
+            return jsonify({"error": "Clase inválida o sin restricción de edad"}), 400
+        restriccion_edad = restriccion_edad['restriccion_edad']
+
+        # Verificar la edad del alumno
+        cursor.execute("""
+            SELECT fecha_nacimiento
+            FROM alumno
+            WHERE ci = %s
+        """, (alumno_ci,))
+        alumno = cursor.fetchone()
+
+        if not alumno or not alumno['fecha_nacimiento']:
+            return jsonify({"error": "Alumno no encontrado o sin fecha de nacimiento registrada"}), 404
+
+        fecha_nacimiento = alumno['fecha_nacimiento']
+        edad = (date.today() - fecha_nacimiento).days // 365
+
+        if edad < restriccion_edad:
+            return jsonify({"error": f"El alumno no cumple con la edad mínima requerida ({restriccion_edad} años)"}), 400
+
+        # Asignar equipamiento si no se proporciona
         if not equipamiento:
             cursor.execute("""
                 SELECT equipamiento.id AS id_equipamiento
@@ -583,11 +635,10 @@ def agregar_alumno_a_clase(id_clase):
             """, (id_clase,))
             equipamiento = [equip['id_equipamiento'] for equip in cursor.fetchall()]
 
-        # Validar que exista al menos un equipamiento
         if not equipamiento:
             return jsonify({"error": "No se pudo asignar equipamiento. Verifique las relaciones en la base de datos."}), 500
 
-        # Insertar el alumno y el equipamiento
+        # Registrar al alumno con equipamiento
         for equip in equipamiento:
             cursor.execute("""
                 INSERT INTO alumno_clase (id_clase, ci_alumno, id_equipamiento)
