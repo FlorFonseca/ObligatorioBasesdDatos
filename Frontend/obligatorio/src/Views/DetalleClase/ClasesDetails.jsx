@@ -9,33 +9,50 @@ export default function ClasesDetails() {
   const [clase, setClase] = useState(null);
   const [showAddAlumnoModal, setShowAddAlumnoModal] = useState(false);
 
-  useEffect(() => {
-    const fetchClase = async () => {
-      try {
-        const response = await fetch(`http://localhost:5000/clase/${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setClase(data);
-        } else {
-          console.error("Error al obtener los detalles de la clase.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
+  // Función para obtener los detalles de la clase
+  const fetchClase = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/clase/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setClase(data);
+        console.log(data);
+      } else {
+        console.error("Error al obtener los detalles de la clase.");
       }
-    };
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchClase();
-  },[id]);
+  }, [id]);
 
   if (!clase) {
     return <p>Cargando detalles de la clase...</p>;
   }
 
-  const alumnos = clase.alumnos_inscritos
-    ? clase.alumnos_inscritos.split(", ")
-    : [];
+  const handleEliminarAlumno = async (ci) => {
+    try {
+      const response = await fetch(`http://localhost:5000/clase/${id}/alumno/${ci}`, {
+        method: "DELETE",
+      });
 
- const handleAgregarAlumno = () => {
+      if (response.ok) {
+        console.log("Alumno eliminado de la clase con éxito.");
+        fetchClase(); // Actualizar los detalles de la clase
+      } else {
+        console.error("Error al eliminar al alumno.");
+        alert("No se pudo eliminar al alumno.");
+      }
+    } catch (error) {
+      console.error("Error al realizar la solicitud:", error);
+      alert("Error al eliminar al alumno.");
+    }
+  };
+
+  const handleAgregarAlumno = () => {
     setShowAddAlumnoModal(true);
   };
 
@@ -66,18 +83,36 @@ export default function ClasesDetails() {
       <p>
         <strong>Precio de Equipamiento:</strong> ${clase.costo_equipamiento}
       </p>
+
       <h3>Alumnos que asisten a esta clase:</h3>
       <ul>
-        {alumnos.map((alumno, index) => (
-          <li key={index}>{alumno}</li>
-        ))}
+        {clase.alumnos_inscritos.length > 0 ? (
+          clase.alumnos_inscritos.map((alumno) => (
+            <li key={alumno.ci} className="alumno-item">
+              {`${alumno.nombre} ${alumno.apellido}`}
+              <button
+                onClick={() => handleEliminarAlumno(alumno.ci)}
+                className="eliminar-alumno"
+              >
+                Eliminar
+              </button>
+            </li>
+          ))
+        ) : (
+          <p>No hay alumnos inscritos en esta clase.</p>
+        )}
       </ul>
+
       <button onClick={() => navigate(-1)}>Volver</button>
       <button onClick={handleAgregarAlumno}>Agregar alumno</button>
+
       {showAddAlumnoModal && (
         <ModalAgregarAlumnoAClase
           clase={clase}
-          onClose={() => setShowAddAlumnoModal(false)}
+          onClose={() => {
+            setShowAddAlumnoModal(false);
+            fetchClase(); // Recargar los detalles de la clase después de cerrar el modal
+          }}
         />
       )}
     </div>

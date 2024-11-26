@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: obligatorio
+    ports:
+      - "3306:3306"
+    networks:
+      - backend
+
+  backend:
+    build:
+      context: ./Backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: obligatorio
+    depends_on:
+      - mysql
+    networks:
+      - backend
+
+  frontend:
+    build:
+      context: ./Frontend/obligatorio
+    ports:
+      - "3000:80"
+    volumes:
+      - ./Frontend/obligatorio/build:/usr/share/nginx/html
+    networks:
+      - backend
+
+networks:
+  backend:
